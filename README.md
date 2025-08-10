@@ -77,5 +77,12 @@ docker buildx build --platform linux/arm64 -t 1234567890.dkr.ecr.us-east-1.amazo
 # Deploy the agent
 uv run deploy_agent.py
 
+# Get the ARN
+1. Open the AWS UI Console
+2. Navigate to Agent Runtime
+3. Click the "strands_agent"
+4. In the UI, you will see sample Python code with the ARN
+5. Copy this arn into your .env file
+
 # Invoke the agent to test
 uv run invoke_agent.py

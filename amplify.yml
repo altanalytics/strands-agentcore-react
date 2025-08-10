@@ -9,6 +9,8 @@ backend:
         # Install deps for the Lambda function (flat Gen 2 path)
         - npm ci --cache .npm --prefer-offline --prefix amplify/functions/bedrock-agent-stream || \
           npm install --cache .npm --prefer-offline --prefix amplify/functions/bedrock-agent-stream
+        - npm ci --cache .npm --prefer-offline --prefix amplify/functions/user-signup-notification || \
+          npm install --cache .npm --prefer-offline --prefix amplify/functions/user-signup-notification
     build:
       commands:
         # Root deps if present (don’t fail if no lockfile)

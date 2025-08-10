@@ -2,10 +2,16 @@ import boto3
 import os
 import secrets
 import string
+import json
+from pathlib import Path
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
-load_dotenv()
+parent_dir = Path(__file__).parent.parent
+env_path = parent_dir / '.env'
+load_dotenv(env_path)
+
+
 
 def generate_session_id():
     """Generate exactly 33 character random session ID"""
@@ -22,23 +28,25 @@ session_id = generate_session_id()
 print(f"Generated Session ID: {session_id}")
 
 # Create boto3 session
-session = boto3.Session(profile_name='wsand')
+session = boto3.Session()
 client = session.client('bedrock-agentcore', region_name="us-east-1")
 
 # Test prompt
-prompt = "What is artificial intelligence?"
+payload = json.dumps({
+    "input": {"prompt": "Who won the superbowl in 1992?"},
+})
 
 try:
     # Invoke the agent runtime
-    print(f"🤖 Invoking agent with prompt: '{prompt}'")
+    print(f"🤖 Invoking agent with prompt: '{payload}'")
     print(f"📋 Agent Runtime ARN: {agent_runtime_arn}")
     print(f"🔑 Session ID: {session_id}")
     print()
     
     response = client.invoke_agent_runtime(
         agentRuntimeArn=agent_runtime_arn,
-        sessionId=session_id,
-        inputText=prompt,
+        runtimeSessionId=session_id,
+        payload=payload,
         qualifier='DEFAULT'
     )
     
@@ -46,11 +54,10 @@ try:
     print("📤 Response:")
     
     # Handle streaming response
-    if 'completion' in response:
-        for chunk in response['completion']:
-            if 'chunk' in chunk and 'bytes' in chunk['chunk']:
-                text = chunk['chunk']['bytes'].decode('utf-8')
-                print(text, end='', flush=True)
+    stream = response['response']
+    for chunk in stream.iter_lines():
+        if chunk:
+            print(chunk.decode('utf-8'), end='', flush=True)
     
     print("\n\n🎉 Invocation complete!")
     
