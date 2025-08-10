@@ -35,11 +35,12 @@ const getWelcomeMessage = (): Message => ({
 // Function to get the Lambda function URL from Amplify outputs
 const getLambdaFunctionUrl = (): string => {
   const config = Amplify.getConfig();
-  console.log('Amplify config:', config); // Debug log
+  console.log('Full Amplify config:', config);
+  console.log('Custom config:', (config as any).custom);
   
   // Access the URL from custom outputs (now properly configured in main.tsx)
   const functionUrl = (config as any).custom?.bedrockAgentStreamUrl;
-  console.log('Function URL from config:', functionUrl); // Debug log
+  console.log('bedrockAgentStreamUrl from config:', functionUrl);
   
   if (!functionUrl) {
     console.error('bedrockAgentStreamUrl not found in custom config');
@@ -53,6 +54,15 @@ const getLambdaFunctionUrl = (): string => {
 // Function to make authenticated requests to Lambda Function URL
 const makeAuthenticatedRequest = async (payload: any) => {
   try {
+    const functionUrl = getLambdaFunctionUrl();
+    
+    console.log('Function URL from config:', functionUrl);
+    
+    if (!functionUrl) {
+      throw new Error('Lambda function URL not available. Please check your deployment.');
+    }
+
+    // Get AWS credentials from Cognito
     const session = await fetchAuthSession();
     const credentials = session.credentials;
     
@@ -60,12 +70,7 @@ const makeAuthenticatedRequest = async (payload: any) => {
       throw new Error('No credentials available. User must be authenticated.');
     }
 
-    const functionUrl = getLambdaFunctionUrl();
-    if (!functionUrl) {
-      throw new Error('Lambda function URL not available. Please check your deployment.');
-    }
-
-    console.log('Making request to:', functionUrl);
+    console.log('Making authenticated request to:', functionUrl);
     console.log('With payload:', payload);
     console.log('Credentials available:', {
       accessKeyId: credentials.accessKeyId ? 'present' : 'missing',
@@ -103,11 +108,11 @@ const makeAuthenticatedRequest = async (payload: any) => {
       body,
     };
 
-    console.log('Signing request:', { hostname: url.hostname, path: url.pathname });
+    console.log('Signing request for:', { hostname: url.hostname, path: url.pathname });
     
     const signedRequest = await sigv4.sign(request);
     
-    console.log('Signed headers:', Object.keys(signedRequest.headers || {}));
+    console.log('Request signed successfully');
     
     const response = await fetch(functionUrl, {
       method: 'POST',
@@ -118,11 +123,12 @@ const makeAuthenticatedRequest = async (payload: any) => {
     console.log('Response received:', {
       status: response.status,
       statusText: response.statusText,
+      ok: response.ok
     });
 
     return response;
   } catch (error) {
-    console.error('Detailed error making authenticated request:', error);
+    console.error('Error making authenticated request:', error);
     throw error;
   }
 };

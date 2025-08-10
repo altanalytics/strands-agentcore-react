@@ -92,7 +92,7 @@ const functionUrl = backend.bedrockAgentStream.resources.lambda.addFunctionUrl({
     allowedOrigins: ['*'],              // tighten later to your site origin(s)
     allowCredentials: false,            // must be false with wildcard origin
     allowedMethods: [HttpMethod.POST],  // don’t include OPTIONS for Function URLs
-    allowedHeaders: ['content-type', 'authorization', 'x-amz-date', 'x-amz-security-token'],
+    allowedHeaders: ['*'],              // Allow all headers for AWS signing
     maxAge: Duration.seconds(300),
   },
 });
