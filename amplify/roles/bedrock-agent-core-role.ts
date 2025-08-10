@@ -34,6 +34,18 @@ export function createBedrockAgentCoreRole(scope: Construct): Role {
     resources: ['*']
   }));
 
+  // Add ECR permissions for Docker image access
+  role.addToPolicy(new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: [
+      'ecr:GetAuthorizationToken',
+      'ecr:BatchCheckLayerAvailability',
+      'ecr:GetDownloadUrlForLayer',
+      'ecr:BatchGetImage'
+    ],
+    resources: ['*']
+  }));
+
   // Add CloudWatch Logs permissions
   role.addToPolicy(new PolicyStatement({
     effect: Effect.ALLOW,
