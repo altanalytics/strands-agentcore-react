@@ -3,8 +3,8 @@ import { Authenticator } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css';
 import ReactMarkdown from 'react-markdown';
 import { Amplify } from 'aws-amplify';
-import { fetchAuthSession } from 'aws-amplify/auth';
-import { fetchUserAttributes } from 'aws-amplify/auth';
+import { fetchUserAttributes, fetchAuthSession } from 'aws-amplify/auth';
+
 import "./App.css";
 
 interface Message {
@@ -14,7 +14,6 @@ interface Message {
   timestamp: Date;
 }
 
-const userAttributes = await fetchUserAttributes();
 
 // Generate a random 33-character session ID
 const generateSessionId = (): string => {
@@ -83,6 +82,8 @@ function ChatApp() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, streamingResponse]);
+
+
 
   // Debug: Log session ID when it changes
   useEffect(() => {
@@ -383,6 +384,22 @@ function ChatApp() {
   );
 }
 
+  const [userName, setUserName] = useState('User');
+
+    useEffect(() => {
+
+        const fetchUserData = async () => {
+
+                const userAttributes = await fetchUserAttributes();
+                console.log('User attributes:', userAttributes);
+                
+                const userName = userAttributes.name || 'No Name Entered';
+                setUserName(userName);
+            
+        };
+        fetchUserData();
+    }, []);
+
 function App() {
   return (
     <Authenticator
@@ -406,7 +423,7 @@ function App() {
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
           }}>
             <span style={{ fontSize: '14px', color: '#64748b' }}>
-              Welcome, {userAttributes.name || user?.signInDetails?.loginId}
+              Welcome, {userName}
             </span>
             <button 
               onClick={signOut}
