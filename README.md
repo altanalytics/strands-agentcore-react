@@ -17,13 +17,17 @@ A complete starter template for building a custom Agent Chat application with Re
 
 ## Quick Start
 
-### **1. Deploy Infrastructure**
+### **1a. Deploy Infrastructure (option 1) **
 ```bash
 git clone 
 cd strands-agentcore-react
 npm install
 AWS_PROFILE=your-profile npx ampx sandbox
 ```
+
+### OR
+
+### **1b. Deploy Infrastructure (option 2)**
 
 ### **2. Configure Environment Variables**
 In **Amplify Console** → Environment Variables:
@@ -93,7 +97,7 @@ uv run deploy_agent.py
 2. Navigate to Amazon Bedrock AgentCore
 3. Naviagete to Agent Runtime > strands_agent
 4. Pull the arn
-5. Add a .env file in the top of your folder and add:
+5. Add a .env file in the top of your project folder and add:
 
 ```
 # Agentcore
@@ -120,11 +124,5 @@ Add the agent runtime ARN to Amplify Console environment variables and redeploy.
 - ✅ **Production-ready infrastructure** on AWS
 - ✅ **Easy customization** - modify the agent code in `genai/`
 
-## Local Development
-
-```bash
-npm run dev              # Frontend development
-npx ampx sandbox --debug # Backend logs
-```
 
 Your chat app will be available at the Amplify-generated URL with full authentication and AI agent integration! 🚀

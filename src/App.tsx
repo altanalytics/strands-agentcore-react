@@ -4,6 +4,7 @@ import '@aws-amplify/ui-react/styles.css';
 import ReactMarkdown from 'react-markdown';
 import { Amplify } from 'aws-amplify';
 import { fetchUserAttributes, fetchAuthSession } from 'aws-amplify/auth';
+import { post } from 'aws-amplify/api';
 
 import "./App.css";
 
@@ -35,12 +36,23 @@ const getWelcomeMessage = (): Message => ({
 // Function to get the Lambda function URL from Amplify outputs
 const getLambdaFunctionUrl = (): string => {
   const config = Amplify.getConfig();
-  // The function URL will be available in the custom outputs after deployment
-  return (config as any).custom?.bedrockAgentStreamUrl || '';
+  console.log('Amplify config:', config); // Debug log
+  
+  // Access the URL from custom outputs (now properly configured in main.tsx)
+  const functionUrl = (config as any).custom?.bedrockAgentStreamUrl;
+  console.log('Function URL from config:', functionUrl); // Debug log
+  
+  if (!functionUrl) {
+    console.error('bedrockAgentStreamUrl not found in custom config');
+    console.log('Available custom keys:', Object.keys((config as any).custom || {}));
+    return '';
+  }
+  
+  return functionUrl;
 };
 
 // Function to make authenticated requests to Lambda Function URL
-const makeAuthenticatedRequest = async (url: string, payload: any) => {
+const makeAuthenticatedRequest = async (payload: any) => {
   try {
     const session = await fetchAuthSession();
     const credentials = session.credentials;
@@ -49,19 +61,69 @@ const makeAuthenticatedRequest = async (url: string, payload: any) => {
       throw new Error('No credentials available. User must be authenticated.');
     }
 
-    // For now, we'll use a simple fetch - in production you'd want proper AWS IAM signing
-    const response = await fetch(url, {
-      method: "POST",
+    const functionUrl = getLambdaFunctionUrl();
+    if (!functionUrl) {
+      throw new Error('Lambda function URL not available. Please check your deployment.');
+    }
+
+    console.log('Making request to:', functionUrl);
+    console.log('With payload:', payload);
+    console.log('Credentials available:', {
+      accessKeyId: credentials.accessKeyId ? 'present' : 'missing',
+      secretAccessKey: credentials.secretAccessKey ? 'present' : 'missing',
+      sessionToken: credentials.sessionToken ? 'present' : 'missing'
+    });
+
+    // Import AWS SDK signing utilities
+    const { SignatureV4 } = await import('@aws-sdk/signature-v4');
+    const { Sha256 } = await import('@aws-crypto/sha256-js');
+    
+    const url = new URL(functionUrl);
+    const body = JSON.stringify(payload);
+    
+    const sigv4 = new SignatureV4({
+      service: 'lambda',
+      region: 'us-east-1',
+      credentials: {
+        accessKeyId: credentials.accessKeyId!,
+        secretAccessKey: credentials.secretAccessKey!,
+        sessionToken: credentials.sessionToken,
+      },
+      sha256: Sha256,
+    });
+
+    const request = {
+      method: 'POST',
+      hostname: url.hostname,
+      path: url.pathname,
+      protocol: url.protocol,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session.tokens?.accessToken?.toString()}`,
+        'host': url.hostname,
       },
-      body: JSON.stringify(payload),
+      body,
+    };
+
+    console.log('Signing request:', { hostname: url.hostname, path: url.pathname });
+    
+    const signedRequest = await sigv4.sign(request);
+    
+    console.log('Signed headers:', Object.keys(signedRequest.headers || {}));
+    
+    const response = await fetch(functionUrl, {
+      method: 'POST',
+      headers: signedRequest.headers,
+      body: signedRequest.body,
+    });
+
+    console.log('Response received:', {
+      status: response.status,
+      statusText: response.statusText,
     });
 
     return response;
   } catch (error) {
-    console.error('Error making authenticated request:', error);
+    console.error('Detailed error making authenticated request:', error);
     throw error;
   }
 };
@@ -125,18 +187,12 @@ function ChatApp() {
     setStreamingResponse("");
     
     try {
-      const functionUrl = getLambdaFunctionUrl();
-      
-      if (!functionUrl) {
-        throw new Error('Lambda function URL not available. Please check your deployment.');
-      }
-
       console.log("Sending request with payload:", {
         prompt: prompt,
         session_id: sessionId
       });
 
-      const response = await makeAuthenticatedRequest(functionUrl, {
+      const response = await makeAuthenticatedRequest({
         prompt: prompt,
         session_id: sessionId
       });
@@ -384,26 +440,35 @@ function ChatApp() {
   );
 }
 
+function App() {
   const [userName, setUserName] = useState('User');
 
-    useEffect(() => {
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const userAttributes = await fetchUserAttributes();
+      console.log('User attributes:', userAttributes);
+      
+      const userName = userAttributes.name || 'No Name Entered';
+      setUserName(userName);
+    };
+    fetchUserData();
+  }, []);
 
-        const fetchUserData = async () => {
-
-                const userAttributes = await fetchUserAttributes();
-                console.log('User attributes:', userAttributes);
-                
-                const userName = userAttributes.name || 'No Name Entered';
-                setUserName(userName);
-            
-        };
-        fetchUserData();
-    }, []);
-
-function App() {
   return (
     <Authenticator
       signUpAttributes={['email', 'name']}
+      components={{
+        SignUp: {
+          FormFields() {
+            return (
+              <>
+                {/* Default Fields - this ensures name field is shown */}
+                <Authenticator.SignUp.FormFields />
+              </>
+            );
+          },
+        },
+      }}
     >
       {({ signOut }) => (
         <div>

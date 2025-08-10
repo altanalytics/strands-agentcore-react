@@ -15,7 +15,7 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
   });
 
   const region = process.env.AWS_REGION || "us-east-1";
-  const runtimeArn = process.env.AGENTCORE_RUNTIME_ARN | "placeholder";
+  const runtimeArn = process.env.AGENTCORE_RUNTIME_ARN || "placeholder";
   const qualifier  = process.env.AGENTCORE_QUALIFIER || "DEFAULT";
 
   let body = {};
