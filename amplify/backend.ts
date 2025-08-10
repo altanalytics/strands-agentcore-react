@@ -34,7 +34,7 @@ const functionUrl = backend.bedrockAgentStream.resources.lambda.addFunctionUrl({
   cors: {
     allowedOrigins: ['*'],
     allowCredentials: false,
-    allowedMethods: [HttpMethod.POST, HttpMethod.OPTIONS],
+    allowedMethods: [HttpMethod.POST],
     allowedHeaders: ['content-type', 'authorization', 'x-amz-date', 'x-amz-security-token'],
     maxAge: Duration.seconds(300),
   },
