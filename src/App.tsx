@@ -401,7 +401,7 @@ function App() {
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
           }}>
             <span style={{ fontSize: '14px', color: '#64748b' }}>
-              Welcome, {user?.signInDetails?.loginId}
+              Welcome, {user?.attributes?.name || user?.signInDetails?.loginId}
             </span>
             <button 
               onClick={signOut}

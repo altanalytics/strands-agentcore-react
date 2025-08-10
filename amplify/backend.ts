@@ -12,12 +12,39 @@ const backend = defineBackend({
 // Create the Bedrock Agent Core role
 const bedrockAgentCoreRole = createBedrockAgentCoreRole(backend.createStack('BedrockAgentCoreStack'));
 
+// Add IAM permissions and Function URL using the resources property
+backend.bedrockAgentStream.resources.lambda.addToRolePolicy(
+  new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: [
+      'bedrock-agentcore:InvokeAgentRuntime',
+      'bedrock-agentcore:GetAgentRuntime'
+    ],
+    resources: [
+      process.env.AGENTCORE_RUNTIME_ARN || '*',
+      `${process.env.AGENTCORE_RUNTIME_ARN || '*'}/*`
+    ]
+  })
+);
+
+// Add Function URL
+backend.bedrockAgentStream.resources.lambda.addFunctionUrl({
+  authType: 'AWS_IAM',
+  cors: {
+    allowCredentials: true,
+    allowHeaders: ['content-type', 'authorization', 'x-amz-date', 'x-amz-security-token'],
+    allowMethods: ['POST', 'OPTIONS'],
+    allowOrigins: ['*'],
+    maxAge: 300
+  }
+});
+
 // Grant authenticated users permission to invoke the Lambda function URL
 backend.auth.resources.authenticatedUserIamRole.addToPrincipalPolicy(
   new PolicyStatement({
     effect: Effect.ALLOW,
     actions: ['lambda:InvokeFunctionUrl'],
-    resources: [bedrockAgentStream.resources.lambda.functionArn],
+    resources: [backend.bedrockAgentStream.resources.lambda.functionArn],
   })
 );
 
@@ -26,14 +53,14 @@ backend.auth.resources.authenticatedUserIamRole.addToPrincipalPolicy(
   new PolicyStatement({
     effect: Effect.ALLOW,
     actions: ['lambda:InvokeFunction'],
-    resources: [bedrockAgentStream.resources.lambda.functionArn],
+    resources: [backend.bedrockAgentStream.resources.lambda.functionArn],
   })
 );
 
 // Export the function URL for the frontend to use
 backend.addOutput({
   custom: {
-    bedrockAgentStreamUrl: bedrockAgentStream.resources.url,
+    bedrockAgentStreamUrl: backend.bedrockAgentStream.resources.lambda.functionUrl,
     bedrockAgentCoreRoleArn: bedrockAgentCoreRole.roleArn,
   },
 });
