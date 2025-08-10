@@ -473,28 +473,28 @@ function App() {
       {({ signOut }) => (
         <div>
           <div style={{ 
-            position: 'absolute', 
+            position: 'fixed', 
             top: '20px', 
             right: '20px', 
             zIndex: 1000,
             display: 'flex',
             alignItems: 'center',
             gap: '12px',
-            background: 'rgba(255, 255, 255, 0.9)',
+            background: 'rgba(30, 41, 59, 0.95)',
             padding: '8px 16px',
             borderRadius: '12px',
             backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
           }}>
-            <span style={{ fontSize: '14px', color: '#64748b' }}>
+            <span style={{ fontSize: '14px', color: '#e2e8f0' }}>
               Welcome, {userName}
             </span>
             <button 
               onClick={signOut}
               style={{
                 padding: '6px 12px',
-                background: '#ef4444',
+                background: '#dc2626',
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
@@ -502,8 +502,8 @@ function App() {
                 cursor: 'pointer',
                 transition: 'all 0.2s ease'
               }}
-              onMouseOver={(e) => e.currentTarget.style.background = '#dc2626'}
-              onMouseOut={(e) => e.currentTarget.style.background = '#ef4444'}
+              onMouseOver={(e) => e.currentTarget.style.background = '#b91c1c'}
+              onMouseOut={(e) => e.currentTarget.style.background = '#dc2626'}
             >
               Sign out
             </button>

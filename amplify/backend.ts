@@ -14,15 +14,16 @@ import {
 } from 'aws-cdk-lib/aws-lambda';
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import { EmailSubscription } from 'aws-cdk-lib/aws-sns-subscriptions';
-
-// If you also create a Bedrock Agent Core role elsewhere:
-// import { createBedrockAgentCoreRole } from './roles/bedrock-agent-core-role';
+import { createBedrockAgentCoreRole } from './roles/bedrock-agent-core-role';
 
 const backend = defineBackend({
   auth,
   bedrockAgentStream,
   userSignupNotification,
 });
+
+// Create the Bedrock Agent Core role
+const bedrockAgentCoreRole = createBedrockAgentCoreRole(backend.createStack('BedrockAgentCoreStack'));
 
 /* ------------------------- SNS: signup notifications ------------------------ */
 
@@ -112,6 +113,7 @@ backend.addOutput({
   custom: {
     bedrockAgentStreamUrl: functionUrl.url,
     agentCoreRuntimeArn: agentRuntimeArn ?? '',
+    bedrockAgentCoreRoleArn: bedrockAgentCoreRole.roleArn,
     signupNotificationTopicArn: signupNotificationTopic.topicArn,
   },
 });
