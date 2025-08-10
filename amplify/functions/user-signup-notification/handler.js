@@ -1,9 +1,9 @@
-// handler.mjs
-import { SNSClient, PublishCommand } from "@aws-sdk/client-sns";
+// handler.js
+const AWS = require('aws-sdk');
 
-const sns = new SNSClient({ region: process.env.AWS_REGION });
+const sns = new AWS.SNS({ region: process.env.AWS_REGION });
 
-export const handler = async (event) => {
+exports.handler = async (event) => {
   console.log('User signup event:', JSON.stringify(event, null, 2));
   
   try {
@@ -23,11 +23,11 @@ Timestamp: ${new Date().toISOString()}
 
     // Send SNS notification
     if (process.env.SNS_TOPIC_ARN) {
-      await sns.send(new PublishCommand({
+      await sns.publish({
         TopicArn: process.env.SNS_TOPIC_ARN,
         Subject: message.subject,
         Message: message.body,
-      }));
+      }).promise();
     }
 
     // Log for CloudWatch
