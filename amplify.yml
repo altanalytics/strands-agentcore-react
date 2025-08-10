@@ -3,8 +3,9 @@ backend:
   phases:
     preBuild:
       commands:
-        # Install deps for your streaming Lambda so esbuild can resolve the SDK
-        - npm ci --cache .npm --prefer-offline --prefix amplify/backend/functions/bedrock-agent-stream
+        # Install deps for the streaming Lambda in flat Gen 2 layout
+        - npm ci --cache .npm --prefer-offline --prefix amplify/functions/bedrock-agent-stream || \
+          npm install --cache .npm --prefer-offline --prefix amplify/functions/bedrock-agent-stream
     build:
       commands:
         - npm ci --cache .npm --prefer-offline
