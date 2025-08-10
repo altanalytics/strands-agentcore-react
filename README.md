@@ -114,7 +114,7 @@ NOTIFICATION_EMAIL=yourname@example.com
 uv run invoke_agent.py
 ```
 
-### **6. Update Frontend**
+### **7. Update Frontend**
 Add the agent runtime ARN to Amplify Console environment variables and redeploy.
 
 ## What You Get
@@ -127,3 +127,10 @@ Add the agent runtime ARN to Amplify Console environment variables and redeploy.
 
 
 Your chat app will be available at the Amplify-generated URL with full authentication and AI agent integration! 🚀
+
+
+### **BONUS. Run a working Agent in the CLI**
+This is good for prototyping and building out your app and interfacing through the CLI rather than the app. 
+```bash
+uv run cli_agent.py
+```
