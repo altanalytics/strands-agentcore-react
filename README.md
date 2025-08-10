@@ -31,7 +31,8 @@ AWS_PROFILE=your-profile npx ampx sandbox
 
 ### **2. Configure Environment Variables**
 In **Amplify Console** → Environment Variables:
-- `AGENTCORE_RUNTIME_ARN` = `your-agent-runtime-arn` (add after step 4)
+- `AGENTCORE_RUNTIME_ARN` = `arn:aws:bedrock-agentcore:us-east-1:123456789012:runtime/strands_agent_xyz` 
+    * You will get the real one after step 4, but use this placeholder for now before deployment
 - `NOTIFICATION_EMAIL` = `your-email@example.com`
 
 
