@@ -5,11 +5,18 @@ import { PolicyStatement, Effect } from 'aws-cdk-lib/aws-iam';
 import { Duration } from 'aws-cdk-lib';
 import { FunctionUrlAuthType, HttpMethod } from 'aws-cdk-lib/aws-lambda';
 import { createBedrockAgentCoreRole } from './roles/bedrock-agent-core-role';
+import { createBedrockAgentCoreLayer } from './layers/bedrock-agentcore-layer/resource';
 
 const backend = defineBackend({
   auth,
   bedrockAgentStream,
 });
+
+// Create the Bedrock Agent Core layer
+const bedrockAgentCoreLayer = createBedrockAgentCoreLayer(backend.createStack('LayerStack'));
+
+// Add the layer to the function
+backend.bedrockAgentStream.resources.lambda.addLayers(bedrockAgentCoreLayer);
 
 // Create the Bedrock Agent Core role
 const bedrockAgentCoreRole = createBedrockAgentCoreRole(backend.createStack('BedrockAgentCoreStack'));
