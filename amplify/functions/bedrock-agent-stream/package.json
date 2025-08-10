@@ -1,0 +1,8 @@
+{
+  "name": "bedrock-agent-stream",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "@aws-sdk/client-bedrock-agentcore": "^3.0.0"
+  }
+}
