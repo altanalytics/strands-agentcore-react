@@ -1,4 +1,5 @@
 import { defineAuth } from '@aws-amplify/backend';
+import { userSignupNotification } from '../functions/user-signup-notification/resource';
 
 /**
  * Define and configure your auth resource
@@ -9,8 +10,11 @@ export const auth = defineAuth({
     email: true,
   },
   userAttributes: {
-    name: {
+    fullname: {
       required: true,
     },
+  },
+  triggers: {
+    postConfirmation: userSignupNotification,
   },
 });

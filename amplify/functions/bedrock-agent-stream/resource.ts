@@ -3,7 +3,7 @@ import { defineFunction } from '@aws-amplify/backend';
 export const bedrockAgentStream = defineFunction({
   name: 'bedrock-agent-stream',
   entry: './handler.mjs',
-  runtime: 'nodejs22.x',
+  runtime: 20,
   timeoutSeconds: 300, // 5 minutes for streaming responses
   memoryMB: 1024,
   environment: {

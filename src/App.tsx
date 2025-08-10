@@ -382,7 +382,9 @@ function ChatApp() {
 
 function App() {
   return (
-    <Authenticator>
+    <Authenticator
+      signUpAttributes={['email', 'fullname']}
+    >
       {({ signOut, user }) => (
         <div>
           <div style={{ 
