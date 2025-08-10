@@ -9,8 +9,8 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
     headers: {
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache",
-      "Connection": "keep-alive",
-      "Access-Control-Allow-Origin": "*"      // adjust CORS as needed
+      "Connection": "keep-alive"
+      // CORS headers removed - handled by Function URL configuration
     }
   });
 
