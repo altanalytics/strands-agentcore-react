@@ -6,6 +6,7 @@ import { PolicyStatement, Effect } from 'aws-cdk-lib/aws-iam';
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import { EmailSubscription } from 'aws-cdk-lib/aws-sns-subscriptions';
 import { Duration } from 'aws-cdk-lib';
+import { FunctionUrlAuthType, HttpMethod } from 'aws-cdk-lib/aws-lambda';
 import { createBedrockAgentCoreRole } from './roles/bedrock-agent-core-role';
 
 const backend = defineBackend({
@@ -55,12 +56,12 @@ backend.bedrockAgentStream.resources.lambda.addToRolePolicy(
 
 // Add Function URL
 const functionUrl = backend.bedrockAgentStream.resources.lambda.addFunctionUrl({
-  authType: 'AWS_IAM' as const,
+  authType: FunctionUrlAuthType.AWS_IAM,
   cors: {
     allowCredentials: true,
-    allowHeaders: ['content-type', 'authorization', 'x-amz-date', 'x-amz-security-token'],
-    allowMethods: ['POST', 'OPTIONS'],
-    allowOrigins: ['*'],
+    allowedHeaders: ['content-type', 'authorization', 'x-amz-date', 'x-amz-security-token'],
+    allowedMethods: [HttpMethod.POST, HttpMethod.OPTIONS],
+    allowedOrigins: ['*'],
     maxAge: Duration.seconds(300)
   }
 });
