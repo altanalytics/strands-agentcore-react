@@ -1,10 +1,7 @@
 import { defineBackend } from '@aws-amplify/backend';
 import { auth } from './auth/resource';
 import { bedrockAgentStream } from './functions/bedrock-agent-stream/resource';
-import { userSignupNotification } from './functions/user-signup-notification/resource';
 import { PolicyStatement, Effect } from 'aws-cdk-lib/aws-iam';
-import { Topic } from 'aws-cdk-lib/aws-sns';
-import { EmailSubscription } from 'aws-cdk-lib/aws-sns-subscriptions';
 import { Duration } from 'aws-cdk-lib';
 import { FunctionUrlAuthType, HttpMethod } from 'aws-cdk-lib/aws-lambda';
 import { createBedrockAgentCoreRole } from './roles/bedrock-agent-core-role';
@@ -12,29 +9,7 @@ import { createBedrockAgentCoreRole } from './roles/bedrock-agent-core-role';
 const backend = defineBackend({
   auth,
   bedrockAgentStream,
-  userSignupNotification,
 });
-
-// Create SNS topic for user signup notifications
-const signupNotificationTopic = new Topic(backend.createStack('NotificationStack'), 'UserSignupTopic', {
-  displayName: 'User Signup Notifications',
-});
-
-// Subscribe your email to the topic (replace with your email)
-const notificationEmail = process.env.NOTIFICATION_EMAIL || 'your-email@example.com';
-signupNotificationTopic.addSubscription(new EmailSubscription(notificationEmail));
-
-// Add SNS topic ARN to the notification function environment
-backend.userSignupNotification.addEnvironment('SNS_TOPIC_ARN', signupNotificationTopic.topicArn);
-
-// Grant the notification function permission to publish to SNS
-backend.userSignupNotification.resources.lambda.addToRolePolicy(
-  new PolicyStatement({
-    effect: Effect.ALLOW,
-    actions: ['sns:Publish'],
-    resources: [signupNotificationTopic.topicArn],
-  })
-);
 
 // Create the Bedrock Agent Core role
 const bedrockAgentCoreRole = createBedrockAgentCoreRole(backend.createStack('BedrockAgentCoreStack'));
@@ -89,6 +64,5 @@ backend.addOutput({
   custom: {
     bedrockAgentStreamUrl: functionUrl.url,
     bedrockAgentCoreRoleArn: bedrockAgentCoreRole.roleArn,
-    signupNotificationTopicArn: signupNotificationTopic.topicArn,
   },
 });
