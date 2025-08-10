@@ -30,3 +30,4 @@ amplifyconfiguration*
 
 # python
 *venv*
+*__pycache__*
