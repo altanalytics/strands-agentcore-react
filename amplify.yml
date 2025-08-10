@@ -3,30 +3,19 @@ backend:
   phases:
     preBuild:
       commands:
-        # Use Node 20
         - nvm install 20
         - nvm use 20
         - node -v && npm -v
-
-        # Echo the env that ampx relies on
-        - echo "AMPLIFY_APP_ID=${AMPLIFY_APP_ID}"
-        - echo "AWS_BRANCH=${AWS_BRANCH}"
-
-        # Guard: fail early if required vars are empty
-        - 'test -n "$AMPLIFY_APP_ID" || (echo "AMPLIFY_APP_ID is empty" && exit 1)'
-        - 'test -n "$AWS_BRANCH" || (echo "AWS_BRANCH is empty" && exit 1)'
-
-        # Install deps for your function (flat Gen 2 layout)
+        # Install deps for the Lambda function (flat Gen 2 path)
         - npm ci --cache .npm --prefer-offline --prefix amplify/functions/bedrock-agent-stream || \
           npm install --cache .npm --prefer-offline --prefix amplify/functions/bedrock-agent-stream
     build:
       commands:
-        # Root deps (if any)
+        # Root deps if present (don’t fail if no lockfile)
         - npm ci --cache .npm --prefer-offline || npm install --cache .npm --prefer-offline
-
-        # Deploy backend (must use AMPLIFY_APP_ID, not AWS_APP_ID)
+        # Deploy backend with AWS_APP_ID
         - npx ampx --version
-        - npx ampx pipeline-deploy --branch "$AWS_BRANCH" --app-id "$AMPLIFY_APP_ID" --outputs-version 1.2
+        - npx ampx pipeline-deploy --branch "$AWS_BRANCH" --app-id "$AWS_APP_ID" --outputs-version 1.2
   artifacts:
     baseDirectory: .
     files:
