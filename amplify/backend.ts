@@ -1,63 +1,56 @@
+// amplify/backend.ts
 import { defineBackend } from '@aws-amplify/backend';
 import { auth } from './auth/resource';
 import { bedrockAgentStream } from './functions/bedrock-agent-stream/resource';
-import { PolicyStatement, Effect } from 'aws-cdk-lib/aws-iam';
 import { Duration } from 'aws-cdk-lib';
-import { FunctionUrlAuthType, HttpMethod } from 'aws-cdk-lib/aws-lambda';
-import { createBedrockAgentCoreRole } from './roles/bedrock-agent-core-role';
-import { createBedrockAgentCoreLayer } from './layers/bedrock-agentcore-layer/resource';
+import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
+import { FunctionUrlAuthType, HttpMethod, InvokeMode } from 'aws-cdk-lib/aws-lambda';
 
 const backend = defineBackend({
   auth,
   bedrockAgentStream,
 });
 
-// Create the Bedrock Agent Core layer
-const bedrockAgentCoreLayer = createBedrockAgentCoreLayer(backend.createStack('LayerStack'));
+// Require the runtime ARN to be set in env
+const agentRuntimeArn = process.env.AGENTCORE_RUNTIME_ARN;
+if (!agentRuntimeArn) {
+  throw new Error('AGENTCORE_RUNTIME_ARN is not set (Amplify Console → Backend environment variables).');
+}
 
-// Add the layer to the function
-backend.bedrockAgentStream.resources.lambda.addLayers(bedrockAgentCoreLayer);
-
-// Create the Bedrock Agent Core role
-const bedrockAgentCoreRole = createBedrockAgentCoreRole(backend.createStack('BedrockAgentCoreStack'));
-
-// Add IAM permissions and Function URL using the resources property
+// Allow the function to call AgentCore
 backend.bedrockAgentStream.resources.lambda.addToRolePolicy(
   new PolicyStatement({
     effect: Effect.ALLOW,
-    actions: [
-      'bedrock-agentcore:InvokeAgentRuntime',
-      'bedrock-agentcore:GetAgentRuntime'
-    ],
-    resources: [
-      process.env.AGENTCORE_RUNTIME_ARN || '*',
-      `${process.env.AGENTCORE_RUNTIME_ARN || '*'}/*`
-    ]
+    actions: ['bedrock-agentcore:InvokeAgentRuntime', 'bedrock-agentcore:GetAgentRuntime'],
+    resources: [agentRuntimeArn],
   })
 );
 
-// Add Function URL
+// Function URL with streaming enabled (IAM-protected)
+// Using wildcard CORS for first deploy; tighten later and set allowCredentials:true.
 const functionUrl = backend.bedrockAgentStream.resources.lambda.addFunctionUrl({
   authType: FunctionUrlAuthType.AWS_IAM,
+  invokeMode: InvokeMode.RESPONSE_STREAM,
   cors: {
-    allowCredentials: true,
-    allowedHeaders: ['content-type', 'authorization', 'x-amz-date', 'x-amz-security-token'],
-    allowedMethods: [HttpMethod.POST, HttpMethod.OPTIONS],
     allowedOrigins: ['*'],
-    maxAge: Duration.seconds(300)
-  }
+    allowCredentials: false,
+    allowedMethods: [HttpMethod.POST, HttpMethod.OPTIONS],
+    allowedHeaders: ['content-type', 'authorization', 'x-amz-date', 'x-amz-security-token'],
+    maxAge: Duration.seconds(300),
+  },
 });
 
-// Grant authenticated users permission to invoke the Lambda function URL
+// Let Cognito **authenticated** users invoke the Function URL
 backend.auth.resources.authenticatedUserIamRole.addToPrincipalPolicy(
   new PolicyStatement({
     effect: Effect.ALLOW,
     actions: ['lambda:InvokeFunctionUrl'],
     resources: [backend.bedrockAgentStream.resources.lambda.functionArn],
+    conditions: { StringEquals: { 'lambda:FunctionUrlAuthType': 'AWS_IAM' } },
   })
 );
 
-// Also allow authenticated users to invoke the function directly (if needed)
+// (Optional) Allow direct Invoke (SDK path) if you ever use it
 backend.auth.resources.authenticatedUserIamRole.addToPrincipalPolicy(
   new PolicyStatement({
     effect: Effect.ALLOW,
@@ -66,10 +59,10 @@ backend.auth.resources.authenticatedUserIamRole.addToPrincipalPolicy(
   })
 );
 
-// Export the function URL for the frontend to use
+// Output URL + ARN for your frontend (available in amplify_outputs.json)
 backend.addOutput({
   custom: {
     bedrockAgentStreamUrl: functionUrl.url,
-    bedrockAgentCoreRoleArn: bedrockAgentCoreRole.roleArn,
+    agentCoreRuntimeArn: agentRuntimeArn,
   },
 });
