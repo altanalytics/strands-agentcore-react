@@ -17,14 +17,21 @@ if (!agentRuntimeArn) {
   throw new Error('AGENTCORE_RUNTIME_ARN is not set (Amplify Console → Backend environment variables).');
 }
 
-// Allow the function to call AgentCore
-backend.bedrockAgentStream.resources.lambda.addToRolePolicy(
-  new PolicyStatement({
-    effect: Effect.ALLOW,
-    actions: ['bedrock-agentcore:InvokeAgentRuntime', 'bedrock-agentcore:GetAgentRuntime'],
-    resources: [agentRuntimeArn],
-  })
-);
+
+// Only attach the permission if we actually have a real ARN
+if (agentRuntimeArn && agentRuntimeArn.startsWith('arn:aws:bedrock-agentcore:')) {
+  backend.bedrockAgentStream.resources.lambda.addToRolePolicy(
+    new PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: ['bedrock-agentcore:InvokeAgentRuntime', 'bedrock-agentcore:GetAgentRuntime'],
+      resources: [agentRuntimeArn],
+    })
+  );
+} else {
+  // No policy = no access (safe). We’ll add it after the runtime is created.
+  console.warn('Skipping AgentCore IAM grant; AGENTCORE_RUNTIME_ARN not set or placeholder.');
+}
+
 
 // Function URL with streaming enabled (IAM-protected)
 // Using wildcard CORS for first deploy; tighten later and set allowCredentials:true.
