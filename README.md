@@ -24,5 +24,48 @@ This is going to:
 
 ## Build and deploy your AI Agent
 
-PLACE HOLDER
+We will not stand up a very basic chat agent that can be highly customized after deployment
+
+First you need to go into Bedrock and enable the Nova Micro Model (it's cheap!)
+
+Second, test that your agent works locally:
+
+# Start the app (make sure your AWS Credentials are set up)
+uv run uvicorn agent:app --host 0.0.0.0 --port 8080
+
+# Test /invocations endpoint
+curl -X POST http://localhost:8080/invocations \
+  -H "Content-Type: application/json" \
+  -d '{
+    "input": {"prompt": "What is artificial intelligence?"}
+  }'
+
+
+
+
+
+# Setup docker and Build the image
+docker buildx create --use
+docker buildx build --platform linux/arm64 -t my-agent:arm64 --load .
+
+# Test locally with credentials
+docker run --platform linux/arm64 -p 8080:8080 \
+  -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
+  -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
+  -e AWS_SESSION_TOKEN="$AWS_SESSION_TOKEN" \
+  -e AWS_REGION="$AWS_REGION" \
+  my-agent:arm64
+
+# OR Use an env file - assuming it is in current directory
+docker run --platform linux/arm64 -p 8080:8080 \
+--env-file docker.env \
+my-agent:arm64
+
+# Rerun the curl command
+
+# Now set up ecr (use your aws account id)
+aws ecr create-repository --repository-name my-strands-agent --region us-east-1 --profile default
+aws ecr get-login-password --region us-east-1 --profile genai | docker login --username AWS --password-stdin 1234567890.dkr.ecr.us-east-1.amazonaws.com
+docker buildx build --platform linux/arm64 -t 1234567890.dkr.ecr.us-east-1.amazonaws.com/my-strands-agent:latest --push .
+
 
