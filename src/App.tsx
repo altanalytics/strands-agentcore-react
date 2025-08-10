@@ -4,7 +4,6 @@ import '@aws-amplify/ui-react/styles.css';
 import ReactMarkdown from 'react-markdown';
 import { Amplify } from 'aws-amplify';
 import { fetchUserAttributes, fetchAuthSession } from 'aws-amplify/auth';
-import { post } from 'aws-amplify/api';
 
 import "./App.css";
 

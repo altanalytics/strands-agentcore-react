@@ -58,20 +58,29 @@ signupFn.addEnvironment('SNS_TOPIC_ARN', signupNotificationTopic.topicArn);
 const agentRuntimeArn = process.env.AGENTCORE_RUNTIME_ARN;
 
 // Only attach permission when we have a real ARN (avoid CFN “ARN or * required”)
-if (agentRuntimeArn && agentRuntimeArn.startsWith('arn:aws:bedrock-agentcore:')) {
-  backend.bedrockAgentStream.resources.lambda.addToRolePolicy(
-    new PolicyStatement({
-      effect: Effect.ALLOW,
-      actions: ['bedrock-agentcore:InvokeAgentRuntime', 'bedrock-agentcore:GetAgentRuntime'],
-      resources: [agentRuntimeArn],
-    })
-  );
-} else {
-  // No permission yet — your streaming lambda will just emit a friendly SSE error if it needs the ARN.
-  // console.warn(...) is fine; CloudFormation ignores console output.
-  // eslint-disable-next-line no-console
-  console.warn('Skipping AgentCore IAM grant; AGENTCORE_RUNTIME_ARN not set or placeholder.');
-}
+// Add Bedrock Agent Core permissions to Lambda function (unconditional)
+backend.bedrockAgentStream.resources.lambda.addToRolePolicy(
+  new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: [
+      'bedrock-agentcore:InvokeAgentRuntime', 
+      'bedrock-agentcore:GetAgentRuntime'
+    ],
+    resources: ['*'], // Allow access to all agent runtimes
+  })
+);
+
+// Also add general Bedrock permissions for model access
+backend.bedrockAgentStream.resources.lambda.addToRolePolicy(
+  new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: [
+      'bedrock:InvokeModel',
+      'bedrock:InvokeModelWithResponseStream'
+    ],
+    resources: ['*'],
+  })
+);
 
 /* ---------------------- Streaming Function URL (IAM) ----------------------- */
 
