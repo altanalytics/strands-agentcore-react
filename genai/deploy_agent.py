@@ -1,13 +1,13 @@
 import boto3
 
-session = boto3.Session(profile_name='wsand')
+session = boto3.Session()
 client = session.client('bedrock-agentcore-control', region_name="us-east-1")
 
 # Get Account ID
 sts_client = session.client("sts")
 identity = sts_client.get_caller_identity()
 account_id = identity["Account"]
-
+print(f"Account ID: {account_id}")
 
 response = client.create_agent_runtime(
     agentRuntimeName='strands_agent',

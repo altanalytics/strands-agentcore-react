@@ -5,11 +5,15 @@ import { bedrockAgentStream } from './functions/bedrock-agent-stream/resource';
 import { Duration } from 'aws-cdk-lib';
 import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { FunctionUrlAuthType, HttpMethod, InvokeMode } from 'aws-cdk-lib/aws-lambda';
+import { createBedrockAgentCoreRole } from './roles/bedrock-agent-core-role';
 
 const backend = defineBackend({
   auth,
   bedrockAgentStream,
 });
+
+// Create the Bedrock Agent Core role
+const bedrockAgentCoreRole = createBedrockAgentCoreRole(backend.createStack('BedrockAgentCoreStack'));
 
 // Require the runtime ARN to be set in env
 const agentRuntimeArn = process.env.AGENTCORE_RUNTIME_ARN;
@@ -71,5 +75,6 @@ backend.addOutput({
   custom: {
     bedrockAgentStreamUrl: functionUrl.url,
     agentCoreRuntimeArn: agentRuntimeArn,
+    bedrockAgentCoreRoleArn: bedrockAgentCoreRole.roleArn,
   },
 });
