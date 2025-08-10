@@ -405,7 +405,7 @@ function App() {
     <Authenticator
       signUpAttributes={['email', 'name']}
     >
-      {({ signOut, user }) => (
+      {({ signOut }) => (
         <div>
           <div style={{ 
             position: 'absolute', 
