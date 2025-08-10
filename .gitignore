@@ -32,3 +32,4 @@ amplifyconfiguration*
 *venv*
 *__pycache__*
 *docker.env*
+*.env*

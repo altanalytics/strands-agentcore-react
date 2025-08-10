@@ -4,6 +4,8 @@ This repository provides a starter template to help you build your own custom Ag
 
 There is a more enhanced version of this application that uses more Agent capabilities with NFL data. You can see the site [here]() and the code repo [here](). 
 
+Make sure your aws cli is up to date.
+
 ## Create the infrastructure
 
 1. Clone the repository to your git repository
@@ -29,6 +31,9 @@ We will not stand up a very basic chat agent that can be highly customized after
 First you need to go into Bedrock and enable the Nova Micro Model (it's cheap!)
 
 Second, test that your agent works locally:
+
+# Install uv if you need it
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Start the app (make sure your AWS Credentials are set up)
 uv run uvicorn agent:app --host 0.0.0.0 --port 8080
@@ -69,3 +74,8 @@ aws ecr get-login-password --region us-east-1 --profile genai | docker login --u
 docker buildx build --platform linux/arm64 -t 1234567890.dkr.ecr.us-east-1.amazonaws.com/my-strands-agent:latest --push .
 
 
+# Deploy the agent
+uv run deploy_agent.py
+
+# Invoke the agent to test
+uv run invoke_agent.py

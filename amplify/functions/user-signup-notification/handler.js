@@ -1,43 +1,39 @@
-// handler.js
-const AWS = require('aws-sdk');
+// handler.mjs
+import { SNSClient, PublishCommand } from "@aws-sdk/client-sns";
 
-const sns = new AWS.SNS({ region: process.env.AWS_REGION });
+const sns = new SNSClient({ region: process.env.AWS_REGION });
 
-exports.handler = async (event) => {
-  console.log('User signup event:', JSON.stringify(event, null, 2));
-  
+export const handler = async (event) => {
+  console.log("User signup event:", JSON.stringify(event, null, 2));
+
   try {
-    const { userAttributes, userName } = event.request;
-    
-    const message = {
-      subject: '🚨 New User Signup Alert',
-      body: `
-New user has signed up!
+    const email = userAttributes?.email;
+    const name = userAttributes?.name ?? "Not provided";
 
-Username: ${userName}
-Email: ${userAttributes.email}
-Name: ${userAttributes.name || 'Not provided'}
-Timestamp: ${new Date().toISOString()}
-      `.trim()
-    };
-
-    // Send SNS notification
     if (process.env.SNS_TOPIC_ARN) {
-      await sns.publish({
-        TopicArn: process.env.SNS_TOPIC_ARN,
-        Subject: message.subject,
-        Message: message.body,
-      }).promise();
-    }
+      const subject = "🚨 New User Signup Alert";
+      const body = [
+        "New user has signed up!",
+        "",
+        `Email: ${email}`,
+        `Name: ${name}`,
+        `Timestamp: ${new Date().toISOString()}`
+      ].join("\n");
 
-    // Log for CloudWatch
-    console.log('User signup notification sent:', message);
-    
-  } catch (error) {
-    console.error('Error sending signup notification:', error);
-    // Don't fail the signup process if notification fails
+      await sns.send(new PublishCommand({
+        TopicArn: process.env.SNS_TOPIC_ARN,
+        Subject: subject,
+        Message: body,
+      }));
+
+      console.log("User signup notification sent.");
+    } else {
+      console.warn("SNS_TOPIC_ARN not set; skipping notification.");
+    }
+  } catch (err) {
+    console.error("Error sending signup notification:", err);
+    // don’t block sign-up
   }
 
-  // Return the event unchanged (required for Cognito triggers)
-  return event;
+  return event; // required by Cognito triggers
 };

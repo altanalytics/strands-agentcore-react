@@ -2,27 +2,61 @@
 import { defineBackend } from '@aws-amplify/backend';
 import { auth } from './auth/resource';
 import { bedrockAgentStream } from './functions/bedrock-agent-stream/resource';
+import { userSignupNotification } from './functions/user-signup-notification/resource';
+
 import { Duration } from 'aws-cdk-lib';
 import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
-import { FunctionUrlAuthType, HttpMethod, InvokeMode } from 'aws-cdk-lib/aws-lambda';
-import { createBedrockAgentCoreRole } from './roles/bedrock-agent-core-role';
+import {
+  FunctionUrlAuthType,
+  HttpMethod,
+  InvokeMode,
+  Function as LambdaFunction, // for casting to add env
+} from 'aws-cdk-lib/aws-lambda';
+import { Topic } from 'aws-cdk-lib/aws-sns';
+import { EmailSubscription } from 'aws-cdk-lib/aws-sns-subscriptions';
+
+// If you also create a Bedrock Agent Core role elsewhere:
+// import { createBedrockAgentCoreRole } from './roles/bedrock-agent-core-role';
 
 const backend = defineBackend({
   auth,
   bedrockAgentStream,
+  userSignupNotification,
 });
 
-// Create the Bedrock Agent Core role
-const bedrockAgentCoreRole = createBedrockAgentCoreRole(backend.createStack('BedrockAgentCoreStack'));
+/* ------------------------- SNS: signup notifications ------------------------ */
 
-// Require the runtime ARN to be set in env
+// Create an SNS topic + subscription for new user signup alerts
+const notifyStack = backend.createStack('NotificationStack');
+const signupNotificationTopic = new Topic(notifyStack, 'UserSignupTopic', {
+  displayName: 'User Signup Notifications',
+});
+
+// Change this per env in Amplify Console if you want:
+const notificationEmail = process.env.NOTIFICATION_EMAIL || 'your-email@example.com';
+signupNotificationTopic.addSubscription(new EmailSubscription(notificationEmail));
+
+// Grant the trigger lambda permission to publish to the topic
+backend.userSignupNotification.resources.lambda.addToRolePolicy(
+  new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: ['sns:Publish'],
+    resources: [signupNotificationTopic.topicArn],
+  })
+);
+
+// Pass the Topic ARN to the trigger lambda as an env var.
+// `resources.lambda` is typed as IFunction; cast to Function to access addEnvironment.
+const signupFn = backend.userSignupNotification.resources
+  .lambda as unknown as LambdaFunction;
+signupFn.addEnvironment('SNS_TOPIC_ARN', signupNotificationTopic.topicArn);
+
+/* ---------------------- Bedrock AgentCore integration ---------------------- */
+
+// Agent runtime ARN (set later; safe to be missing for first deploy)
 const agentRuntimeArn = process.env.AGENTCORE_RUNTIME_ARN;
-if (!agentRuntimeArn) {
-  throw new Error('AGENTCORE_RUNTIME_ARN is not set (Amplify Console → Backend environment variables).');
-}
 
-
-// Only attach the permission if we actually have a real ARN
+// Only attach permission when we have a real ARN (avoid CFN “ARN or * required”)
 if (agentRuntimeArn && agentRuntimeArn.startsWith('arn:aws:bedrock-agentcore:')) {
   backend.bedrockAgentStream.resources.lambda.addToRolePolicy(
     new PolicyStatement({
@@ -32,26 +66,28 @@ if (agentRuntimeArn && agentRuntimeArn.startsWith('arn:aws:bedrock-agentcore:'))
     })
   );
 } else {
-  // No policy = no access (safe). We’ll add it after the runtime is created.
+  // No permission yet — your streaming lambda will just emit a friendly SSE error if it needs the ARN.
+  // console.warn(...) is fine; CloudFormation ignores console output.
+  // eslint-disable-next-line no-console
   console.warn('Skipping AgentCore IAM grant; AGENTCORE_RUNTIME_ARN not set or placeholder.');
 }
 
+/* ---------------------- Streaming Function URL (IAM) ----------------------- */
 
-// Function URL with streaming enabled (IAM-protected)
-// Using wildcard CORS for first deploy; tighten later and set allowCredentials:true.
+// Create a Function URL with streaming enabled and temporary open CORS
 const functionUrl = backend.bedrockAgentStream.resources.lambda.addFunctionUrl({
   authType: FunctionUrlAuthType.AWS_IAM,
   invokeMode: InvokeMode.RESPONSE_STREAM,
   cors: {
-    allowedOrigins: ['*'],
-    allowCredentials: false,
-    allowedMethods: [HttpMethod.POST],
+    allowedOrigins: ['*'],              // tighten later to your site origin(s)
+    allowCredentials: false,            // must be false with wildcard origin
+    allowedMethods: [HttpMethod.POST],  // don’t include OPTIONS for Function URLs
     allowedHeaders: ['content-type', 'authorization', 'x-amz-date', 'x-amz-security-token'],
     maxAge: Duration.seconds(300),
   },
 });
 
-// Let Cognito **authenticated** users invoke the Function URL
+// Let Cognito *authenticated* users call the Function URL (SigV4 via Identity Pool)
 backend.auth.resources.authenticatedUserIamRole.addToPrincipalPolicy(
   new PolicyStatement({
     effect: Effect.ALLOW,
@@ -61,7 +97,7 @@ backend.auth.resources.authenticatedUserIamRole.addToPrincipalPolicy(
   })
 );
 
-// (Optional) Allow direct Invoke (SDK path) if you ever use it
+// (Optional) Allow direct Invoke if you ever call the Lambda by ARN (not via Function URL)
 backend.auth.resources.authenticatedUserIamRole.addToPrincipalPolicy(
   new PolicyStatement({
     effect: Effect.ALLOW,
@@ -70,11 +106,12 @@ backend.auth.resources.authenticatedUserIamRole.addToPrincipalPolicy(
   })
 );
 
-// Output URL + ARN for your frontend (available in amplify_outputs.json)
+/* --------------------------------- Outputs -------------------------------- */
+
 backend.addOutput({
   custom: {
     bedrockAgentStreamUrl: functionUrl.url,
-    agentCoreRuntimeArn: agentRuntimeArn,
-    bedrockAgentCoreRoleArn: bedrockAgentCoreRole.roleArn,
+    agentCoreRuntimeArn: agentRuntimeArn ?? '',
+    signupNotificationTopicArn: signupNotificationTopic.topicArn,
   },
 });

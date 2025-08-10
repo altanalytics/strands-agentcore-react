@@ -123,6 +123,7 @@ dependencies = [
     { name = "fastapi" },
     { name = "httpx" },
     { name = "pydantic" },
+    { name = "python-dotenv" },
     { name = "strands-agents" },
     { name = "uvicorn" },
 ]
@@ -132,6 +133,7 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.116.1" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "pydantic", specifier = ">=2.11.7" },
+    { name = "python-dotenv", specifier = ">=1.1.1" },
     { name = "strands-agents", specifier = ">=1.4.0" },
     { name = "uvicorn", specifier = ">=0.35.0" },
 ]
