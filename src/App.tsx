@@ -4,6 +4,7 @@ import '@aws-amplify/ui-react/styles.css';
 import ReactMarkdown from 'react-markdown';
 import { Amplify } from 'aws-amplify';
 import { fetchAuthSession } from 'aws-amplify/auth';
+import { fetchUserAttributes } from 'aws-amplify/auth';
 import "./App.css";
 
 interface Message {
@@ -12,6 +13,8 @@ interface Message {
   isUser: boolean;
   timestamp: Date;
 }
+
+const userAttributes = await fetchUserAttributes();
 
 // Generate a random 33-character session ID
 const generateSessionId = (): string => {
@@ -383,7 +386,7 @@ function ChatApp() {
 function App() {
   return (
     <Authenticator
-      signUpAttributes={['email', 'fullname']}
+      signUpAttributes={['email', 'name']}
     >
       {({ signOut, user }) => (
         <div>
@@ -403,7 +406,7 @@ function App() {
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
           }}>
             <span style={{ fontSize: '14px', color: '#64748b' }}>
-              Welcome, {user?.attributes?.name || user?.signInDetails?.loginId}
+              Welcome, {userAttributes.name || user?.signInDetails?.loginId}
             </span>
             <button 
               onClick={signOut}
