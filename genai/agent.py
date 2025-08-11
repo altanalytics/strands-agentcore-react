@@ -12,7 +12,7 @@ app = FastAPI(title="Strands Agent Server", version="1.0.0")
 
 # Create a Bedrock model instance
 bedrock_model = BedrockModel(
-    model_id="amazon.nova-micro-v1:0",
+    model_id="us.amazon.nova-micro-v1:0",
     max_tokens=2000,
     temperature=0.3,
     top_p=0.8,
