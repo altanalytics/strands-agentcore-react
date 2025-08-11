@@ -2,30 +2,14 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Dict, Any
 from datetime import datetime,timezone
-from strands import Agent
 from fastapi.responses import StreamingResponse
-from strands.models import BedrockModel
-from strands.agent.conversation_manager import SlidingWindowConversationManager
+from agent_config import create_strands_agent
 
 
 app = FastAPI(title="Strands Agent Server", version="1.0.0")
 
-# Create a Bedrock model instance
-bedrock_model = BedrockModel(
-    model_id="us.amazon.nova-micro-v1:0",
-    max_tokens=2000,
-    temperature=0.3,
-    top_p=0.8,
-)
-
-# Configure conversation management for production
-conversation_manager = SlidingWindowConversationManager(
-    window_size=10,  # Limit history size
-)
-
-# Create an agent using the BedrockModel instance
-strands_agent = Agent(model=bedrock_model,
-                      conversation_manager=conversation_manager)
+# Create agent using shared configuration
+strands_agent = create_strands_agent()
 
 class InvocationRequest(BaseModel):
     input: Dict[str, Any]

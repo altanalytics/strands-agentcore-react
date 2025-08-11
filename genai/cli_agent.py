@@ -4,25 +4,11 @@ Very basic Strands CLI chatbot - bare bones version
 """
 
 import asyncio
-from strands import Agent
-from strands.models import BedrockModel
-from strands_tools import shell, editor, python_repl
+from agent_config import create_strands_agent
 
 async def main():
-    # Create a basic agent with minimal tools
-
-    # Create a Bedrock model instance
-    bedrock_model = BedrockModel(
-        model_id="amazon.nova-micro-v1:0",
-        max_tokens=2000,
-        temperature=0.3,
-        top_p=0.8,
-    )
-    agent = Agent(
-        model=bedrock_model,
-        system_prompt="You are a helpful assistant.",
-        tools=[shell, editor, python_repl]
-    )
+    # Create agent using shared configuration
+    agent = create_strands_agent()
     
     print("🤖 Strands CLI Chatbot - Type 'quit' to exit")
     print("-" * 50)

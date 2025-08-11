@@ -151,8 +151,11 @@ Make whatever changes are needed and then push to your git repo for an automated
 Your chat app will be available at the Amplify-generated URL with full authentication and AI agent integration! 🚀
 
 
-### **BONUS. Run a working Agent in the CLI**
-This is good for prototyping and building out your app and interfacing through the CLI rather than the app. 
+### **BONUS: Test your agent in the CLI**
+This is good for prototyping and building out your app and interfacing through the CLI rather than the launching the app and using the curl command. 
+
+Both the `cli_agent.py` and `agent.py` reference the same `agent_config.py` file, which is where the agent is built. 
+
 ```bash
 uv run cli_agent.py
 ```
