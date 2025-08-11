@@ -94,7 +94,7 @@ curl -X POST http://localhost:8080/invocations \
 ### **4. Build and Push Docker Image**
 ```bash
 
-# Create ECR repository (replace account ID)
+# Create ECR repository - only run this one time
 aws ecr create-repository --repository-name my-strands-agent --region us-east-1 --profile default
 
 # Set your AWS account ID as a variable
@@ -111,6 +111,9 @@ docker buildx build --platform linux/arm64 -t $AWS_ACCOUNT.dkr.ecr.us-east-1.ama
 ```bash
 # Deploy to Bedrock Agent Core
 uv run deploy_agent.py
+
+# You can update your existing agent
+uv run update_agent.py
 
 ```
 
@@ -152,7 +155,7 @@ Your chat app will be available at the Amplify-generated URL with full authentic
 
 
 ### **BONUS: Test your agent in the CLI**
-This is good for prototyping and building out your app and interfacing through the CLI rather than the launching the app and using the curl command. 
+This is good for prototyping and building out your app and interfacing through the CLI rather than launching the app and using the curl command. 
 
 Both the `cli_agent.py` and `agent.py` reference the same `agent_config.py` file, which is where the agent is built. 
 

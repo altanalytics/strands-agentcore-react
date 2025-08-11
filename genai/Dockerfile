@@ -11,6 +11,7 @@ RUN uv sync --frozen --no-cache
 
 # Copy agent file
 COPY agent.py ./
+COPY agent_config.py ./
 
 # Expose port
 EXPOSE 8080

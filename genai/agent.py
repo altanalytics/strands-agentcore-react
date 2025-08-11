@@ -1,54 +1,27 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from typing import Dict, Any
-from datetime import datetime,timezone
-from fastapi.responses import StreamingResponse
+from bedrock_agentcore import BedrockAgentCoreApp
 from agent_config import create_strands_agent
 
+app = BedrockAgentCoreApp()
+agent = create_strands_agent()
 
-app = FastAPI(title="Strands Agent Server", version="1.0.0")
+@app.entrypoint
+async def agent_invocation(payload):
+    user_message = payload.get("prompt", "No prompt found in input...")
+    # tell UI to reset
+    yield {"type": "start"}
 
-# Create agent using shared configuration
-strands_agent = create_strands_agent()
-
-class InvocationRequest(BaseModel):
-    input: Dict[str, Any]
-
-class InvocationResponse(BaseModel):
-    output: Dict[str, Any]
-
-@app.post("/invocations", response_model=InvocationResponse)
-async def invoke_agent_stream(request: InvocationRequest):
     try:
-        user_message = request.input.get("prompt", "")
-        if not user_message:
-            raise HTTPException(
-                status_code=400,
-                detail="No prompt found in input. Please provide a 'prompt' key in the input."
-            )
-
-        async def generate_stream():
-            try:
-                async for event in strands_agent.stream_async(user_message):
-                    if "data" in event:
-                        # Stream the actual agent reasoning and responses
-                        yield event["data"]
-            except Exception as e:
-                yield f"Error: {str(e)}"
-
-        return StreamingResponse(
-            generate_stream(),
-            media_type="text/plain",
-            headers={"Cache-Control": "no-cache", "Connection": "keep-alive"}
-        )
-
+        async for event in agent.stream_async(user_message):
+            txt = event.get("data")
+            if isinstance(txt, str) and txt:
+                # UI will JSON.parse(e.data) and route by type
+                yield {"type": "token", "text": txt}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Agent processing failed: {str(e)}")
+        # optional: surface errors to UI
+        yield {"type": "error", "message": str(e)}
 
-@app.get("/ping")
-async def ping():
-    return {"status": "healthy"}
+    # done marker for UI to stop spinners, etc.
+    yield {"type": "done"}
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+    app.run()

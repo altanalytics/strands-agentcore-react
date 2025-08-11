@@ -33,7 +33,7 @@ client = session.client('bedrock-agentcore', region_name="us-east-1")
 
 # Test prompt
 payload = json.dumps({
-    "input": {"prompt": "Who won the superbowl in 1992?"},
+    "input": {"prompt": "Please solve a mathematical problem using the calculator tool you now have. Please make it challenging, so that you require reasoning and thinking before attempting to solve the problem. Please dont even try to solve for 5 seconds and spend that time thinking"},
 })
 
 try:

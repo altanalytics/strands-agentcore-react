@@ -42,6 +42,29 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ userName }) => {
     console.log('New chat started with Session ID:', newSessionId);
   };
 
+  const parseSSEChunk = (chunk: string): string => {
+    const lines = chunk.split('\n');
+    let extractedText = '';
+    
+    for (const line of lines) {
+      if (line.startsWith('data: ')) {
+        try {
+          const jsonStr = line.slice(6); // Remove 'data: ' prefix
+          const data = JSON.parse(jsonStr);
+          
+          if (data.type === 'token' && data.text) {
+            extractedText += data.text;
+          }
+        } catch (e) {
+          // Skip invalid JSON lines
+          console.warn('Failed to parse SSE line:', line);
+        }
+      }
+    }
+    
+    return extractedText;
+  };
+
   const handleSubmit = async (message: string) => {
     if (!message.trim() || isLoading) return;
     
@@ -80,9 +103,11 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ userName }) => {
           const chunk = decoder.decode(value);
           console.log('Received chunk:', chunk); // Debug log
           
-          // The chunks are already the actual content, not SSE format
-          if (chunk.trim()) {
-            fullResponse += chunk;
+          // Parse the SSE format and extract text tokens
+          const extractedText = parseSSEChunk(chunk);
+          
+          if (extractedText) {
+            fullResponse += extractedText;
             setStreamingResponse(fullResponse);
             console.log('Updated streaming response:', fullResponse); // Debug log
           }
