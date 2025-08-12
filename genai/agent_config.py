@@ -9,19 +9,28 @@ from strands.models import BedrockModel
 from strands.agent.conversation_manager import SlidingWindowConversationManager
 from strands_tools import shell, editor, python_repl, calculator
 
-def create_strands_agent():
+def create_strands_agent(model = 'us.amazon.nova-micro-v1:0',
+                         personality = 'basic'):
     """
     Create and return a configured Strands agent instance.
-    us.amazon.nova-micro-v1:0
-    us.amazon.nova-premier-v1:0
-    us.amazon.nova-pro-v1:0
-    us.anthropic.claude-sonnet-4-20250514-v1:0
+    
+    Model Examples:
+    - us.amazon.nova-micro-v1:0
+    - us.amazon.nova-premier-v1:0
+    - us.amazon.nova-pro-v1:0
+    - us.anthropic.claude-sonnet-4-20250514-v1:0
+    
+    Args:
+        model (str): The Bedrock model ID to use
+        personality (str): Either 'basic' for default prompt or custom system prompt
+        
     Returns:
         Agent: Configured agent ready for use
     """
+    
     # Configure the Bedrock model
     bedrock_model = BedrockModel(
-        model_id="us.amazon.nova-pro-v1:0",
+        model_id=model,
         max_tokens=2000,
         temperature=0.3,
         top_p=0.8,
@@ -32,12 +41,26 @@ def create_strands_agent():
         window_size=10,  # Limit history size
     )
 
+    # Set personality based on input with predefined options
+    predefined_personalities = {
+        'basic': "You are a helpful assistant.",
+        'creative': "You are a creative and imaginative assistant who thinks outside the box.",
+        'analytical': "You are a logical and analytical assistant who provides detailed, structured responses.",
+        'friendly': "You are a warm, friendly, and conversational assistant who uses a casual tone."
+    }
+    
+    if personality in predefined_personalities:
+        system_prompt = predefined_personalities[personality]
+    else:
+        # Treat as custom system prompt
+        system_prompt = personality
+
     # Create and return the agent
     strands_agent = Agent(
         model=bedrock_model,
-        system_prompt="You are a helpful assistant.",
+        system_prompt=system_prompt,
         conversation_manager=conversation_manager,
-        tools=[calculator]
+        #tools=[calculator]
     )
     
     return strands_agent

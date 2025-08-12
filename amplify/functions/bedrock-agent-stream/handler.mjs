@@ -20,12 +20,21 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
 
   let body = {};
   try { body = JSON.parse(event.body || "{}"); } catch {}
-  const prompt    = body.prompt ?? "Hello";
-  const sessionId = body.session_id ?? "default-session";
+  const prompt      = body.prompt ?? "Hello";
+  const sessionId   = body.session_id ?? "default-session";
+  const model       = body.model ?? "us.amazon.nova-micro-v1:0";
+  const personality = body.personality ?? "basic";
+
+  console.log('Request parameters:', { prompt, sessionId, model, personality });
 
   const client = new BedrockAgentCoreClient({ region });
 
-  const payload = JSON.stringify({ prompt });
+  // Pass all parameters to the agent
+  const payload = JSON.stringify({ 
+    prompt, 
+    model, 
+    personality 
+  });
 
   const cmd = new InvokeAgentRuntimeCommand({
     agentRuntimeArn: runtimeArn,

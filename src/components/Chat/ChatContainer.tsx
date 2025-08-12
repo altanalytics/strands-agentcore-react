@@ -3,9 +3,11 @@ import { Box, Paper } from '@mui/material';
 import ChatHeader from './ChatHeader';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
+import ChatSettings from './ChatSettings';
 import { Message, getWelcomeMessage } from '../../types/message';
 import { generateSessionId } from '../../utils/sessionUtils';
 import { makeAuthenticatedRequest } from '../../utils/apiUtils';
+import { DEFAULT_MODEL, DEFAULT_PERSONALITY } from '../../config/agentConfig';
 
 interface ChatContainerProps {
   userName: string;
@@ -17,6 +19,8 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ userName }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [streamingResponse, setStreamingResponse] = useState('');
   const [sessionId, setSessionId] = useState(() => generateSessionId(userName));
+  const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL);
+  const [selectedPersonality, setSelectedPersonality] = useState(DEFAULT_PERSONALITY);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -83,7 +87,9 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ userName }) => {
     try {
       const response = await makeAuthenticatedRequest({
         prompt: message,
-        session_id: sessionId
+        session_id: sessionId,
+        model: selectedModel,
+        personality: selectedPersonality
       });
 
       if (!response.ok) {
@@ -148,7 +154,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ userName }) => {
         elevation={3}
         sx={{ 
           width: '100%',
-          maxWidth: 800,
+          maxWidth: 900, // Increased width to accommodate settings
           height: '90vh',
           display: 'flex',
           flexDirection: 'column',
@@ -159,6 +165,18 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ userName }) => {
         }}
       >
         <ChatHeader onNewChat={handleNewChat} isLoading={isLoading} />
+        
+        {/* Settings Panel */}
+        <Box sx={{ px: 2, pt: 1, pb: 2 }}>
+          <ChatSettings
+            selectedModel={selectedModel}
+            selectedPersonality={selectedPersonality}
+            onModelChange={setSelectedModel}
+            onPersonalityChange={setSelectedPersonality}
+            disabled={isLoading}
+          />
+        </Box>
+        
         <MessageList 
           messages={messages}
           streamingResponse={streamingResponse}

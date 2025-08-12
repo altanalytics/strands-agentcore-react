@@ -2,11 +2,14 @@ from bedrock_agentcore import BedrockAgentCoreApp
 from agent_config import create_strands_agent
 
 app = BedrockAgentCoreApp()
-agent = create_strands_agent()
 
 @app.entrypoint
 async def agent_invocation(payload):
     user_message = payload.get("prompt", "No prompt found in input...")
+    model_selected = payload.get("model", "us.amazon.nova-micro-v1:0")
+    model_persona = payload.get("personality", "basic")
+    print(f'Model parameters {model_selected}, {model_persona}')
+    agent = create_strands_agent(model=model_selected, personality=model_persona)
     # tell UI to reset
     yield {"type": "start"}
 
