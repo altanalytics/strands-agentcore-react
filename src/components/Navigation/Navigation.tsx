@@ -50,14 +50,14 @@ const Navigation: React.FC<NavigationProps> = ({ userName, signOut }) => {
               lineHeight: 1.2,
               color: '#f8fafc'
             }}>
-              AI Assistant
+              GenAI Assistant
             </Typography>
             <Typography variant="caption" sx={{ 
               color: '#94a3b8',
               fontSize: '0.75rem',
               fontWeight: 500
             }}>
-              powered by Amazon Bedrock AgentCore
+              powered by strands-agents and Amazon Bedrock AgentCore
             </Typography>
           </Box>
         </Box>

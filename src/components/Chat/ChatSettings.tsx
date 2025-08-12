@@ -36,12 +36,13 @@ const ChatSettings: React.FC<ChatSettingsProps> = ({
 
   return (
     <Paper 
-      elevation={1} 
+      elevation={2} 
       sx={{ 
-        background: 'rgba(248, 250, 252, 0.8)',
-        borderRadius: 2,
-        border: '1px solid rgba(0, 0, 0, 0.08)',
-        overflow: 'hidden'
+        background: 'linear-gradient(135deg, rgba(248, 250, 252, 0.95) 0%, rgba(241, 245, 249, 0.95) 100%)',
+        borderRadius: 3,
+        border: '1px solid rgba(139, 92, 246, 0.2)',
+        overflow: 'hidden',
+        boxShadow: '0 4px 12px rgba(139, 92, 246, 0.1)',
       }}
     >
       {/* Header with current selection */}
@@ -50,18 +51,19 @@ const ChatSettings: React.FC<ChatSettingsProps> = ({
           display: 'flex', 
           alignItems: 'center', 
           justifyContent: 'space-between',
-          p: 2,
+          p: 2.5,
           cursor: 'pointer',
+          background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(168, 85, 247, 0.05) 100%)',
           '&:hover': {
-            backgroundColor: 'rgba(0, 0, 0, 0.02)'
+            backgroundColor: 'rgba(139, 92, 246, 0.08)'
           }
         }}
         onClick={() => setExpanded(!expanded)}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Settings sx={{ color: 'primary.main', fontSize: 20 }} />
-          <Typography variant="body2" sx={{ fontWeight: 600, mr: 2 }}>
-            Agent Settings
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Settings sx={{ color: 'primary.main', fontSize: 22 }} />
+          <Typography variant="h6" sx={{ fontWeight: 700, mr: 2, color: '#1e293b' }}>
+            Agent Configuration
           </Typography>
           <Chip
             icon={<SmartToy />}
@@ -69,7 +71,7 @@ const ChatSettings: React.FC<ChatSettingsProps> = ({
             variant="outlined"
             size="small"
             color="primary"
-            sx={{ fontSize: '0.75rem', height: 24 }}
+            sx={{ fontSize: '0.75rem', height: 26, fontWeight: 600 }}
           />
           <Chip
             icon={<Psychology />}
@@ -77,17 +79,17 @@ const ChatSettings: React.FC<ChatSettingsProps> = ({
             variant="outlined"
             size="small"
             color="secondary"
-            sx={{ fontSize: '0.75rem', height: 24 }}
+            sx={{ fontSize: '0.75rem', height: 26, fontWeight: 600 }}
           />
         </Box>
-        <IconButton size="small">
+        <IconButton size="small" sx={{ color: 'primary.main' }}>
           {expanded ? <ExpandLess /> : <ExpandMore />}
         </IconButton>
       </Box>
 
       {/* Expandable Settings */}
       <Collapse in={expanded}>
-        <Box sx={{ p: 2, pt: 0, borderTop: '1px solid rgba(0, 0, 0, 0.08)' }}>
+        <Box sx={{ p: 3, pt: 0, borderTop: '1px solid rgba(139, 92, 246, 0.15)' }}>
           <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
             {/* Model Selection */}
             <FormControl sx={{ minWidth: 200, flex: 1 }} disabled={disabled}>

@@ -53,6 +53,11 @@ export const PERSONALITY_OPTIONS: PersonalityOption[] = [
     id: 'friendly',
     name: 'Friendly Companion',
     description: 'Warm and conversational'
+  },
+  {
+    id: 'silly',
+    name: 'Silly Trickster',
+    description: 'Tells jokes and gives silly responses'
   }
 ];
 

@@ -33,7 +33,10 @@ client = session.client('bedrock-agentcore', region_name="us-east-1")
 
 # Test prompt
 payload = json.dumps({
-    "input": {"prompt": "Please solve a mathematical problem using the calculator tool you now have. Please make it challenging, so that you require reasoning and thinking before attempting to solve the problem. Please dont even try to solve for 5 seconds and spend that time thinking"},
+    "prompt": "Tell me about the weather.",
+    "model": "us.amazon.nova-micro-v1:0",
+    "personality": "silly"
+    #"personality": "Pretened you are an old school sports broadcaster talking about the game as a life long fan of the winning team."
 })
 
 try:
@@ -53,13 +56,51 @@ try:
     print("✅ Agent invoked successfully!")
     print("📤 Response:")
     
-    # Handle streaming response
+    # Handle streaming response with proper SSE parsing
     stream = response['response']
+    full_response = ""
+    
     for chunk in stream.iter_lines():
         if chunk:
-            print(chunk.decode('utf-8'), end='', flush=True)
+            chunk_str = chunk.decode('utf-8')
+            
+            # Parse SSE events - handle concatenated data: events
+            if 'data: ' in chunk_str:
+                # Split by 'data: ' and process each JSON event
+                data_parts = chunk_str.split('data: ')
+                
+                for part in data_parts:
+                    if not part.strip():
+                        continue
+                        
+                    # Clean up the JSON part
+                    json_part = part.split('\n')[0].strip()
+                    if not json_part:
+                        continue
+                        
+                    try:
+                        event_data = json.loads(json_part)
+                        
+                        if event_data.get('type') == 'token' and event_data.get('text'):
+                            text = event_data['text']
+                            full_response += text
+                            print(text, end='', flush=True)
+                        elif event_data.get('type') == 'start':
+                            print("🚀 Agent started...", flush=True)
+                        elif event_data.get('type') == 'done':
+                            print("\n✨ Agent finished!", flush=True)
+                        elif event_data.get('type') == 'error':
+                            print(f"\n❌ Agent error: {event_data.get('message', 'Unknown error')}", flush=True)
+                            
+                    except json.JSONDecodeError:
+                        # Skip malformed JSON
+                        continue
+            else:
+                # Handle non-SSE content
+                print(chunk_str, end='', flush=True)
     
-    print("\n\n🎉 Invocation complete!")
+    print(f"\n\n🎉 Invocation complete!")
+    print(f"📝 Full response length: {len(full_response)} characters")
     
 except Exception as e:
     print(f"❌ Error invoking agent: {e}")

@@ -62,7 +62,7 @@ uv run uvicorn agent:app --host 0.0.0.0 --port 8080
 # Test endpoint
 curl -X POST http://localhost:8080/invocations \
   -H "Content-Type: application/json" \
-  -d '{"input": {"prompt": "What is artificial intelligence?"}}'
+  -d '{"prompt": "What is artificial intelligence?"}'
 ```
 
 ### **3. Build and Test Docker Image**
@@ -85,23 +85,29 @@ docker run --platform linux/arm64 -p 8080:8080 \
 docker run --platform linux/arm64 -p 8080:8080 \
   --env-file docker.env my-agent:arm64
 
-# Use same test command as above
+# Use same test command as above but with input paramters
 curl -X POST http://localhost:8080/invocations \
   -H "Content-Type: application/json" \
-  -d '{"input": {"prompt": "What is artificial intelligence?"}}'
+  -d '{
+      "prompt": "Tell me a story",
+      "model": "us.amazon.nova-micro-v1:0",
+      "personality": "You are a storyteller who speaks in the style of Shakespeare."
+  }'
 ```
 
 ### **4. Build and Push Docker Image**
 ```bash
 
-# Create ECR repository - only run this one time
-aws ecr create-repository --repository-name my-strands-agent --region us-east-1 --profile default
-
 # Set your AWS account ID as a variable
-AWS_ACCOUNT=$(aws sts get-caller-identity --query Account --output text --profile default)
+AWS_PROFILE=default
+AWS_ACCOUNT=$(aws sts get-caller-identity --query Account --output text --profile $AWS_PROFILE)
+
+# Create ECR repository - only run this one time
+aws ecr create-repository --repository-name my-strands-agent --region us-east-1 --profile $AWS_PROFILE
+
 
 # Login to ECR using the variable
-aws ecr get-login-password --region us-east-1 --profile default | docker login --username AWS --password-stdin $AWS_ACCOUNT.dkr.ecr.us-east-1.amazonaws.com 
+aws ecr get-login-password --region us-east-1 --profile $AWS_PROFILE | docker login --username AWS --password-stdin $AWS_ACCOUNT.dkr.ecr.us-east-1.amazonaws.com 
 
 # Push to ECR using the variable
 docker buildx build --platform linux/arm64 -t $AWS_ACCOUNT.dkr.ecr.us-east-1.amazonaws.com/my-strands-agent:latest --push .

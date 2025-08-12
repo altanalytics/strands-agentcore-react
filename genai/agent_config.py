@@ -46,20 +46,26 @@ def create_strands_agent(model = 'us.amazon.nova-micro-v1:0',
         'basic': "You are a helpful assistant.",
         'creative': "You are a creative and imaginative assistant who thinks outside the box.",
         'analytical': "You are a logical and analytical assistant who provides detailed, structured responses.",
-        'friendly': "You are a warm, friendly, and conversational assistant who uses a casual tone."
+        'friendly': "You are a warm, friendly, and conversational assistant who uses a casual tone.",
+        'silly': "You are a trickster, you always tell jokes in all your answers and give very silly responses."
     }
+    
+    print(f"Received personality parameter: '{personality}'")
     
     if personality in predefined_personalities:
         system_prompt = predefined_personalities[personality]
+        print(f"Using predefined personality: {system_prompt}")
     else:
         # Treat as custom system prompt
         system_prompt = personality
+        print(f"Using custom personality: {system_prompt}")
 
     # Create and return the agent
     strands_agent = Agent(
         model=bedrock_model,
         system_prompt=system_prompt,
         conversation_manager=conversation_manager,
+        # Adding tools is what triggers "Thinking..." in the UI
         #tools=[calculator]
     )
     

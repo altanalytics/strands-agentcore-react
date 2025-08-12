@@ -3,8 +3,7 @@ import { Box, Paper } from '@mui/material';
 import ChatHeader from './ChatHeader';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
-import ChatSettings from './ChatSettings';
-import { Message, getWelcomeMessage } from '../../types/message';
+import { Message } from '../../types/message';
 import { generateSessionId } from '../../utils/sessionUtils';
 import { makeAuthenticatedRequest } from '../../utils/apiUtils';
 import { DEFAULT_MODEL, DEFAULT_PERSONALITY } from '../../config/agentConfig';
@@ -15,7 +14,7 @@ interface ChatContainerProps {
 
 const ChatContainer: React.FC<ChatContainerProps> = ({ userName }) => {
   const [prompt, setPrompt] = useState('');
-  const [messages, setMessages] = useState<Message[]>([getWelcomeMessage()]);
+  const [messages, setMessages] = useState<Message[]>([]); // Start with empty messages
   const [isLoading, setIsLoading] = useState(false);
   const [streamingResponse, setStreamingResponse] = useState('');
   const [sessionId, setSessionId] = useState(() => generateSessionId(userName));
@@ -39,7 +38,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ userName }) => {
   const handleNewChat = () => {
     const newSessionId = generateSessionId(userName);
     setSessionId(newSessionId);
-    setMessages([getWelcomeMessage()]);
+    setMessages([]); // Start with empty messages
     setStreamingResponse('');
     setIsLoading(false);
     setPrompt('');
@@ -164,18 +163,14 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ userName }) => {
           backdropFilter: 'blur(20px)',
         }}
       >
-        <ChatHeader onNewChat={handleNewChat} isLoading={isLoading} />
-        
-        {/* Settings Panel */}
-        <Box sx={{ px: 2, pt: 1, pb: 2 }}>
-          <ChatSettings
-            selectedModel={selectedModel}
-            selectedPersonality={selectedPersonality}
-            onModelChange={setSelectedModel}
-            onPersonalityChange={setSelectedPersonality}
-            disabled={isLoading}
-          />
-        </Box>
+        <ChatHeader 
+          onNewChat={handleNewChat} 
+          isLoading={isLoading}
+          selectedModel={selectedModel}
+          selectedPersonality={selectedPersonality}
+          onModelChange={setSelectedModel}
+          onPersonalityChange={setSelectedPersonality}
+        />
         
         <MessageList 
           messages={messages}
