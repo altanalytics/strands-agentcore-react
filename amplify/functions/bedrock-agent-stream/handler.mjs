@@ -25,7 +25,7 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
 
   const client = new BedrockAgentCoreClient({ region });
 
-  const payload = JSON.stringify({ input: { prompt } });
+  const payload = JSON.stringify({ prompt });
 
   const cmd = new InvokeAgentRuntimeCommand({
     agentRuntimeArn: runtimeArn,

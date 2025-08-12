@@ -110,10 +110,10 @@ docker buildx build --platform linux/arm64 -t $AWS_ACCOUNT.dkr.ecr.us-east-1.ama
 ### **5. Deploy Agent Runtime**
 ```bash
 # Deploy to Bedrock Agent Core
-uv run deploy_agent.py
+uv run agent_deploy.py
 
 # You can update your existing agent
-uv run update_agent.py
+uv run agent_update.py
 
 ```
 
@@ -135,7 +135,7 @@ Next configure env variables lovally.
 ### **6. Test Agent**
 ```bash
 # Test your deployed agent
-uv run invoke_agent.py
+uv run agent_invoke.py
 ```
 
 ### **7. Deploy**
@@ -157,8 +157,8 @@ Your chat app will be available at the Amplify-generated URL with full authentic
 ### **BONUS: Test your agent in the CLI**
 This is good for prototyping and building out your app and interfacing through the CLI rather than launching the app and using the curl command. 
 
-Both the `cli_agent.py` and `agent.py` reference the same `agent_config.py` file, which is where the agent is built. 
+Both the `agent_cli.py` and `agent.py` reference the same `agent_config.py` file, which is where the agent is built. 
 
 ```bash
-uv run cli_agent.py
+uv run agent_cli.py
 ```
