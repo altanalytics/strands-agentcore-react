@@ -30,7 +30,7 @@ def create_strands_agent(model = 'us.amazon.nova-micro-v1:0',
     
     # Configure the Bedrock model
     bedrock_model = BedrockModel(
-        model_id=model,
+        inference_profile=model,
         max_tokens=2000,
         temperature=0.3,
         top_p=0.8,
