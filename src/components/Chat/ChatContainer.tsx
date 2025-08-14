@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Box, Paper } from '@mui/material';
+import { Box, Paper, IconButton } from '@mui/material';
+import { KeyboardArrowDown } from '@mui/icons-material';
 import ChatHeader from './ChatHeader';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
@@ -22,14 +23,34 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ userName }) => {
   const [selectedPersonality, setSelectedPersonality] = useState(DEFAULT_PERSONALITY);
   const [isInitialized, setIsInitialized] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const [isUserScrolledUp, setIsUserScrolledUp] = useState(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Check if user is scrolled near the bottom
+  const isNearBottom = () => {
+    if (!chatContainerRef.current) return true;
+    
+    const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
+    const threshold = 100; // pixels from bottom
+    return scrollHeight - scrollTop - clientHeight < threshold;
+  };
+
+  // Handle scroll events to detect if user scrolled up
+  const handleScroll = () => {
+    const nearBottom = isNearBottom();
+    setIsUserScrolledUp(!nearBottom);
+  };
+
+  // Smart auto-scroll: only scroll if user is near bottom
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, streamingResponse]);
+    if (!isUserScrolledUp) {
+      scrollToBottom();
+    }
+  }, [messages, streamingResponse, isUserScrolledUp]);
 
   // Log session ID whenever it changes
   useEffect(() => {
