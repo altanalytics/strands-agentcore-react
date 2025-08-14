@@ -36,26 +36,23 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ userName }) => {
     console.log('Current Session ID:', sessionId);
   }, [sessionId]);
 
-  // Initialize with "hello" when component mounts or personality changes
+  // Initialize with "hello" when component mounts, personality changes, model changes, or new chat is started
   useEffect(() => {
     if (!isInitialized) {
-      // Generate new sessionId only on initial load, not on personality changes
-      const isInitialLoad = messages.length === 0 && !streamingResponse;
-      initializeChat(isInitialLoad);
+      initializeChat();
     }
-  }, [selectedPersonality]); // Re-run when personality changes
+  }, [selectedPersonality, selectedModel, isInitialized]); // Re-run when personality, model, or initialization state changes
 
-  const initializeChat = async (generateNewSessionId: boolean = false) => {
+  const initializeChat = async () => {
+    console.log('=== INITIALIZING CHAT ===');
+    console.log('Previous session ID:', sessionId);
     console.log('Initializing chat with personality:', selectedPersonality);
     
-    // Generate a new session ID only when explicitly requested
-    if (generateNewSessionId) {
-      const newSessionId = generateSessionId(userName);
-      setSessionId(newSessionId);
-      console.log('New session ID for initialization:', newSessionId);
-    } else {
-      console.log('Using existing session ID:', sessionId);
-    }
+    // Generate a new session ID for each initialization
+    const newSessionId = generateSessionId(userName);
+    setSessionId(newSessionId);
+    console.log('Generated NEW session ID:', newSessionId);
+    console.log('=== CHAT INITIALIZED ===');
     
     setIsInitialized(true);
     
@@ -64,6 +61,8 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ userName }) => {
   };
 
   const handleNewChat = () => {
+    console.log('=== NEW CHAT CLICKED ===');
+    console.log('Current session ID before new chat:', sessionId);
     setMessages([]);
     setStreamingResponse('');
     setIsLoading(false);
@@ -74,23 +73,36 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ userName }) => {
 
   const handlePersonalityChange = (newPersonality: string) => {
     if (newPersonality !== selectedPersonality) {
+      console.log('=== PERSONALITY CHANGED ===');
       console.log('Personality changed from', selectedPersonality, 'to', newPersonality);
+      console.log('Current session ID before personality change:', sessionId);
       setSelectedPersonality(newPersonality);
       
-      // Clear chat and re-initialize with new personality
-      // Note: Keep the same sessionId to maintain conversation context
+      // Clear chat and re-initialize with new personality and new session ID
       setMessages([]);
       setStreamingResponse('');
       setIsLoading(false);
       setPrompt('');
-      setIsInitialized(false); // This will trigger re-initialization with same sessionId
+      setIsInitialized(false); // This will trigger re-initialization with new session ID
+      console.log('Personality change will generate new session ID');
     }
   };
 
   const handleModelChange = (newModel: string) => {
-    console.log('Model changed from', selectedModel, 'to', newModel);
-    setSelectedModel(newModel);
-    // Note: Model change does NOT clear the chat or re-initialize
+    if (newModel !== selectedModel) {
+      console.log('=== MODEL CHANGED ===');
+      console.log('Model changed from', selectedModel, 'to', newModel);
+      console.log('Current session ID before model change:', sessionId);
+      setSelectedModel(newModel);
+      
+      // Clear chat and re-initialize with new model and new session ID
+      setMessages([]);
+      setStreamingResponse('');
+      setIsLoading(false);
+      setPrompt('');
+      setIsInitialized(false); // This will trigger re-initialization with new session ID
+      console.log('Model change will generate new session ID');
+    }
   };
 
   const parseSSEChunk = (chunk: string): string => {

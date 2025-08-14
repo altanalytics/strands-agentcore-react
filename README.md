@@ -121,7 +121,7 @@ docker buildx build --platform linux/arm64 -t $AWS_ACCOUNT.dkr.ecr.us-east-1.ama
 # *** MAKE SURE THE AMPLIFY APP HAS BEEN DEPLOYED AND THE bedrock-agent-core-role OR THIS WILL FAIL
 uv run agent_deploy.py
 
-# You can update your existing agent
+# You can update your existing agent (don't forget to rebuild and push your docker container)
 uv run agent_update.py
 
 ```
