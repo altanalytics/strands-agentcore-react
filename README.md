@@ -36,16 +36,18 @@ cd strands-agentcore-react
 4. Choose the branch you want to deploy (e.g., `main`)
 5. Click Next and then in Advanced Settings, add two environment variables:
   - `AGENTCORE_RUNTIME_ARN` = `arn:aws:bedrock-agentcore:us-east-1:123456789012:runtime/strands_agent_xyz` 
-    * You will get the real one after step 4, but use this placeholder for now before deployment
+    * You will get the real one after step 5, but use this placeholder for now before deployment
   - `NOTIFICATION_EMAIL` = `your-email@example.com`
+  - `AGENT_SESSION_S3` = `uniques3bucketname`
   6. Once you deploy your application
   7. You can login, but your Agent will not work
 
+**Pay close attention to the environment variables - these have to be set before you deploy**. The `AGENT_SESSION_S3` is a critical component because this is where your session IDs will get saved to and allow your agent to have memory. It also needs to be unique or else the creation will fail. You can create this bucket manually to be sure, but you still need to add it as an environment variable. It will skip the bucket creation if it already exists. 
 
 ## Step 2. Build and Deploy Your AI Agent
 
 ### **1. Enable Bedrock Model**
-Go to AWS Bedrock Console and enable **Nova Micro Model**.
+Go to AWS Bedrock Console and enable **Nova Micro Model** as well as the Pro and Premier. 
 
 ### **2. Test Agent Locally**
 ```bash
@@ -56,7 +58,7 @@ cd strands-agentcore-react/genai
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Test locally 
-export AWS_PROFILE = yourprofile
+export AWS_PROFILE=yourprofile
 uv run uvicorn agent:app --host 0.0.0.0 --port 8080
 
 # Test endpoint
@@ -81,7 +83,7 @@ docker run --platform linux/arm64 -p 8080:8080 \
   -e AWS_REGION="$AWS_REGION" \
   my-agent:arm64
 
-# Test with credentials file
+# OR Test with credentials file (you have to create this)
 docker run --platform linux/arm64 -p 8080:8080 \
   --env-file docker.env my-agent:arm64
 
@@ -116,6 +118,7 @@ docker buildx build --platform linux/arm64 -t $AWS_ACCOUNT.dkr.ecr.us-east-1.ama
 ### **5. Deploy Agent Runtime**
 ```bash
 # Deploy to Bedrock Agent Core
+# *** MAKE SURE THE AMPLIFY APP HAS BEEN DEPLOYED AND THE bedrock-agent-core-role OR THIS WILL FAIL
 uv run agent_deploy.py
 
 # You can update your existing agent
@@ -125,7 +128,7 @@ uv run agent_update.py
 
 The command above will output "Agent Runtime ARN". You will need this value for the next set of steps. 
 
-### **5. Update Environment Variables**
+### **6. Update Environment Variables**
 
 First update the environment variables in Amplify
 
@@ -135,10 +138,10 @@ First update the environment variables in Amplify
 
 Next configure env variables lovally.  
 1. Open the .env.example file in the top folder
-2. Update the ARN with the new ARN and save
+2. Update the ARN with the new ARN and save as .env (not as .env.example!!)
 
 
-### **6. Test Agent**
+### **7. Test Agent**
 ```bash
 # Test your deployed agent
 uv run agent_invoke.py

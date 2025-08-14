@@ -4,13 +4,19 @@ This module provides a centralized way to configure and create agents
 to avoid code duplication between CLI and other components.
 """
 
+import os
+import boto3
 from strands import Agent
 from strands.models import BedrockModel
 from strands.agent.conversation_manager import SlidingWindowConversationManager
+from strands.session.s3_session_manager import S3SessionManager
 from strands_tools import shell, editor, python_repl, calculator
 
 def create_strands_agent(model = 'us.amazon.nova-micro-v1:0',
-                         personality = 'basic'):
+                         personality = 'basic',
+                         session_id = None,
+                         s3_bucket = None,
+                         s3_prefix = None):
     """
     Create and return a configured Strands agent instance.
     
@@ -60,11 +66,30 @@ def create_strands_agent(model = 'us.amazon.nova-micro-v1:0',
         system_prompt = personality
         print(f"Using custom personality: {system_prompt}")
 
+    # Create session manager based on whether S3 parameters are provided
+    session_manager = None
+    if session_id and s3_bucket and s3_prefix:
+        print(f"Creating S3SessionManager - Session: {session_id}, Bucket: {s3_bucket}, Prefix: {s3_prefix}")
+        
+        # Create boto3 session for better credential handling
+        boto_session = boto3.Session(region_name="us-east-1")
+        
+        session_manager = S3SessionManager(
+            session_id=session_id,
+            bucket=s3_bucket,
+            prefix=s3_prefix,
+            boto_session=boto_session,
+            region_name="us-east-1"
+        )
+    else:
+        print("Using default SlidingWindowConversationManager (no S3 session persistence)")
+
     # Create and return the agent
     strands_agent = Agent(
         model=bedrock_model,
         system_prompt=system_prompt,
         conversation_manager=conversation_manager,
+        session_manager=session_manager,  # Add session manager
         # Adding tools is what triggers "Thinking..." in the UI
         #tools=[calculator]
     )

@@ -14,12 +14,13 @@ interface ChatContainerProps {
 
 const ChatContainer: React.FC<ChatContainerProps> = ({ userName }) => {
   const [prompt, setPrompt] = useState('');
-  const [messages, setMessages] = useState<Message[]>([]); // Start with empty messages
+  const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [streamingResponse, setStreamingResponse] = useState('');
   const [sessionId, setSessionId] = useState(() => generateSessionId(userName));
   const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL);
   const [selectedPersonality, setSelectedPersonality] = useState(DEFAULT_PERSONALITY);
+  const [isInitialized, setIsInitialized] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -35,14 +36,61 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ userName }) => {
     console.log('Current Session ID:', sessionId);
   }, [sessionId]);
 
+  // Initialize with "hello" when component mounts or personality changes
+  useEffect(() => {
+    if (!isInitialized) {
+      // Generate new sessionId only on initial load, not on personality changes
+      const isInitialLoad = messages.length === 0 && !streamingResponse;
+      initializeChat(isInitialLoad);
+    }
+  }, [selectedPersonality]); // Re-run when personality changes
+
+  const initializeChat = async (generateNewSessionId: boolean = false) => {
+    console.log('Initializing chat with personality:', selectedPersonality);
+    
+    // Generate a new session ID only when explicitly requested
+    if (generateNewSessionId) {
+      const newSessionId = generateSessionId(userName);
+      setSessionId(newSessionId);
+      console.log('New session ID for initialization:', newSessionId);
+    } else {
+      console.log('Using existing session ID:', sessionId);
+    }
+    
+    setIsInitialized(true);
+    
+    // Send "Hello" to initialize the model
+    await handleSubmit('Hello', true); // true flag indicates this is an initialization
+  };
+
   const handleNewChat = () => {
-    const newSessionId = generateSessionId(userName);
-    setSessionId(newSessionId);
-    setMessages([]); // Start with empty messages
+    setMessages([]);
     setStreamingResponse('');
     setIsLoading(false);
     setPrompt('');
-    console.log('New chat started with Session ID:', newSessionId);
+    setIsInitialized(false); // This will trigger re-initialization with new sessionId
+    console.log('New chat initiated - will generate new session ID on initialization');
+  };
+
+  const handlePersonalityChange = (newPersonality: string) => {
+    if (newPersonality !== selectedPersonality) {
+      console.log('Personality changed from', selectedPersonality, 'to', newPersonality);
+      setSelectedPersonality(newPersonality);
+      
+      // Clear chat and re-initialize with new personality
+      // Note: Keep the same sessionId to maintain conversation context
+      setMessages([]);
+      setStreamingResponse('');
+      setIsLoading(false);
+      setPrompt('');
+      setIsInitialized(false); // This will trigger re-initialization with same sessionId
+    }
+  };
+
+  const handleModelChange = (newModel: string) => {
+    console.log('Model changed from', selectedModel, 'to', newModel);
+    setSelectedModel(newModel);
+    // Note: Model change does NOT clear the chat or re-initialize
   };
 
   const parseSSEChunk = (chunk: string): string => {
@@ -68,17 +116,20 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ userName }) => {
     return extractedText;
   };
 
-  const handleSubmit = async (message: string) => {
+  const handleSubmit = async (message: string, isInitialization: boolean = false) => {
     if (!message.trim() || isLoading) return;
     
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      text: message,
-      isUser: true,
-      timestamp: new Date()
-    };
+    // Only add user message to UI if it's not an initialization
+    if (!isInitialization) {
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        text: message,
+        isUser: true,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, userMessage]);
+    }
 
-    setMessages(prev => [...prev, userMessage]);
     setPrompt('');
     setIsLoading(true);
     setStreamingResponse('');
@@ -118,7 +169,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ userName }) => {
           }
         }
 
-        // Add the complete response as a message
+        // Add the complete response as a message (always add AI responses)
         const aiMessage: Message = {
           id: (Date.now() + 1).toString(),
           text: fullResponse,
@@ -168,8 +219,8 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ userName }) => {
           isLoading={isLoading}
           selectedModel={selectedModel}
           selectedPersonality={selectedPersonality}
-          onModelChange={setSelectedModel}
-          onPersonalityChange={setSelectedPersonality}
+          onModelChange={handleModelChange}
+          onPersonalityChange={handlePersonalityChange}
         />
         
         <MessageList 
@@ -181,7 +232,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ userName }) => {
         <MessageInput
           prompt={prompt}
           setPrompt={setPrompt}
-          onSubmit={handleSubmit}
+          onSubmit={(message) => handleSubmit(message, false)}
           isLoading={isLoading}
         />
       </Paper>

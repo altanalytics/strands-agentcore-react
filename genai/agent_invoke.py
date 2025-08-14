@@ -33,10 +33,11 @@ client = session.client('bedrock-agentcore', region_name="us-east-1")
 
 # Test prompt
 payload = json.dumps({
-    "prompt": "Tell me about the weather.",
+    "prompt": "Who won the superbowl in 1992?",
+    #"prompt": "Tell me about the weather.",
     "model": "us.amazon.nova-micro-v1:0",
-    "personality": "silly"
-    #"personality": "Pretened you are an old school sports broadcaster talking about the game as a life long fan of the winning team."
+    #"personality": "silly"
+    "personality": "Pretened you are an old school sports broadcaster talking about the game as a life long fan of the winning team."
 })
 
 try:
