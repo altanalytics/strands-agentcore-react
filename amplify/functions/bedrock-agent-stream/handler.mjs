@@ -30,6 +30,7 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
     qualifier,
     s3SessionBucket
   });
+  
 
   let body = {};
   try { body = JSON.parse(event.body || "{}"); } catch {}

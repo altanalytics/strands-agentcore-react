@@ -34,13 +34,32 @@ def create_strands_agent(model = 'us.amazon.nova-micro-v1:0',
         Agent: Configured agent ready for use
     """
     
-    # Configure the Bedrock model
-    bedrock_model = BedrockModel(
-        inference_profile=model,
-        max_tokens=2000,
-        temperature=0.3,
-        top_p=0.8,
-    )
+    # Check if this is an Anthropic model that will use thinking
+    is_anthropic_model = model.startswith('us.anthropic.') or model.startswith('anthropic.')
+    
+    # Configure the Bedrock model with Anthropic thinking capabilities
+    bedrock_model_config = {
+        "inference_profile": model,
+        "max_tokens": 2000,
+       # "top_p": 0.8,
+    }
+    
+    # Add thinking configuration for Anthropic models
+    if is_anthropic_model:
+        bedrock_model_config["additional_request_fields"] = {
+            "anthropic_beta": ["interleaved-thinking-2025-05-14"],
+            "thinking": {
+                "type": "enabled",
+                "budget_tokens": 1024  # Smaller budget for this template
+            }
+        }
+        # Anthropic requires temperature=1 when thinking is enabled
+        bedrock_model_config["temperature"] = 1
+    else:
+        # Use custom temperature for non-Anthropic models
+        bedrock_model_config["temperature"] = 0.3
+    
+    bedrock_model = BedrockModel(**bedrock_model_config)
 
     # Configure conversation management for production
     conversation_manager = SlidingWindowConversationManager(
