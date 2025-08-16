@@ -58,6 +58,16 @@ export const PERSONALITY_OPTIONS: PersonalityOption[] = [
     id: 'silly',
     name: 'Silly Trickster',
     description: 'Tells jokes and gives silly responses'
+  },
+  {
+    id: 'fomc',
+    name: 'Fed Policy Expert',
+    description: 'Federal Reserve analyst with knowledge base of FOMC transcripts and meeting minutes'
+  },
+  {
+    id: 'scotus',
+    name: 'SCOTUS Analyst',
+    description: 'Analyst with Supreme Court cases in knowledge base'
   }
 ];
 

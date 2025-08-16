@@ -158,6 +158,7 @@ Make whatever changes are needed and then push to your git repo for an automated
 - ✅ **Email notifications** for new user signups
 - ✅ **Production-ready infrastructure** on AWS
 - ✅ **Easy customization** - modify the agent code in `genai/`
+- ✅ **Knowledge Base integration** with S3 vectors for domain-specific expertise
 
 
 Your chat app will be available at the Amplify-generated URL with full authentication and AI agent integration! 🚀
@@ -171,3 +172,62 @@ Both the `agent_cli.py` and `agent.py` reference the same `agent_config.py` file
 ```bash
 uv run agent_cli.py
 ```
+
+## Knowledge Base Integration (Demonstration)
+
+This template demonstrates how to integrate Amazon Bedrock Knowledge Bases with your AI agent to provide domain-specific expertise and data retrieval capabilities.
+
+> **⚠️ Important Note**: The knowledge bases referenced in this template are for **demonstration purposes only**. Other users will not have access to these specific knowledge bases as they are private resources. However, you can use this structure as a template to integrate your own knowledge bases.
+
+### **Demo Knowledge Base Personalities**
+
+The agent includes two specialized personalities that showcase knowledge base integration patterns:
+
+- **`fomc`** - Federal Reserve and monetary policy expert (Demo)
+  - Shows integration with FOMC meeting minutes and transcripts (1993-2019)
+  - Demonstrates insights on interest rate decisions, economic outlook, and Fed communications
+  - Knowledge Base ID: `P7J0PZOXSE` (hardcoded in tool - **not accessible to other users**)
+
+- **`scotus`** - Supreme Court legal analyst (Demo)
+  - Shows integration with Supreme Court opinions and legal precedents
+  - Demonstrates constitutional law analysis and case law research
+  - Knowledge Base ID: `XPXXQUL4A6` (hardcoded in tool - **not accessible to other users**)
+
+### **How the Integration Structure Works**
+
+1. **Structured Tool Approach**: Each knowledge base has its own dedicated search tool (`fomc_kb_search`, `scotus_kb_search`) with hardcoded KB IDs for reliability
+2. **Personality-Based Configuration**: The agent automatically gets the appropriate knowledge base tool based on the selected personality
+3. **No Loose Coupling**: Knowledge base IDs are baked into the tool code, eliminating the risk of using wrong knowledge bases
+
+### **Data Collection Examples**
+
+The demo knowledge bases were populated using data collection scripts found in `/genai/data_pulls/`. See the [data_pulls README](/genai/data_pulls/README.md) for detailed instructions on data collection and knowledge base setup.
+
+Example data sources:
+- **FOMC Data**: Scraped from Federal Reserve website using `fomc_pull.R`
+- **SCOTUS Data**: Collected from CourtListener API using `scotus_pull.R`
+
+### **Creating Your Own Knowledge Base Integration**
+
+To integrate your own knowledge bases:
+
+1. **Create your knowledge base** in Amazon Bedrock console and note the KB ID
+2. **Create a new tool** in `/genai/tools/` (e.g., `your_kb_search.py`) with your KB ID
+3. **Add the new personality** to `predefined_personalities` in `agent_config.py`
+4. **Configure the tool assignment** in the personality logic
+
+For detailed guidance on setting up knowledge bases and data collection, see the documentation in the `/genai/data_pulls/` folder.
+
+### **Testing Your Knowledge Base Integration**
+
+```bash
+# Test with your own personality
+curl -X POST http://localhost:8080/invocations \
+  -H "Content-Type: application/json" \
+  -d '{
+      "prompt": "Your question here",
+      "personality": "your_custom_personality"
+  }'
+```
+
+This structure provides a scalable, reliable foundation for building knowledge-enhanced AI agents with your own data sources.
