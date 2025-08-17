@@ -34,6 +34,19 @@ export function createBedrockAgentCoreRole(scope: Construct): Role {
     resources: ['*']
   }));
 
+  // Add Bedrock Knowledge Base permissions
+  role.addToPolicy(new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: [
+      'bedrock:Retrieve',
+      'bedrock:RetrieveAndGenerate',
+      'bedrock:GetKnowledgeBase',
+      'bedrock:ListKnowledgeBases',
+      'bedrock:QueryKnowledgeBase'
+    ],
+    resources: ['*']
+  }));
+
   // Add ECR permissions for Docker image access
   role.addToPolicy(new PolicyStatement({
     effect: Effect.ALLOW,
