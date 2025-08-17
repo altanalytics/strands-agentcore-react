@@ -1,54 +1,69 @@
-"""
-SCOTUS Knowledge Base Search Tool
-Searches the Supreme Court of the United States knowledge base for relevant legal information.
-"""
+# scotus_kb_search.py
 
-import boto3
-from strands.tools import tool
+from strands_tools.retrieve import retrieve
+from typing import Any
 
-@tool
-def scotus_kb_search(query: str) -> str:
+# 1. Tool Specification
+TOOL_SPEC = {
+    "name": "scotus_kb_search",
+    "description": "Search the SCOTUS knowledge base for Supreme Court cases, opinions, and legal precedents.",
+    "inputSchema": {
+        "json": {
+            "type": "object",
+            "properties": {
+                "text": {
+                    "type": "string",
+                    "description": "The query to search for in the SCOTUS knowledge base"
+                },
+                "numberOfResults": {
+                    "type": "integer",
+                    "description": "The maximum number of results to return. Default is 5.",
+                    "default": 5
+                },
+                "score": {
+                    "type": "number",
+                    "description": "Minimum relevance score threshold (0.0-1.0). Default is 0.4.",
+                    "default": 0.4
+                }
+            },
+            "required": ["text"]
+        }
+    }
+}
+
+# 2. Tool Function
+def scotus_kb_search(tool, **kwargs: Any):
     """
-    Search the SCOTUS knowledge base for information about Supreme Court cases,
-    opinions, and legal precedents.
+    Search the SCOTUS knowledge base with pre-configured settings.
+    
+    This is a wrapper around the retrieve tool that automatically uses
+    the correct knowledge base ID and region for SCOTUS data.
     
     Args:
-        query: The search query to find relevant SCOTUS information
+        tool: Tool object containing toolUseId and input parameters
+        **kwargs: Additional keyword arguments
         
     Returns:
-        str: Relevant information from the SCOTUS knowledge base
+        dict: Structured response from the knowledge base search
     """
-    try:
-        # Initialize Bedrock Agent Runtime client
-        client = boto3.client('bedrock-agent-runtime', region_name='us-east-1')
-        
-        # Knowledge base ID for SCOTUS data
-        knowledge_base_id = "XPXXQUL4A6"
-        
-        # Perform the search
-        response = client.retrieve(
-            knowledgeBaseId=knowledge_base_id,
-            retrievalQuery={
-                'text': query
-            },
-            retrievalConfiguration={
-                'vectorSearchConfiguration': {
-                    'numberOfResults': 5
-                }
-            }
-        )
-        
-        # Extract and format the results
-        results = []
-        for result in response.get('retrievalResults', []):
-            content = result.get('content', {}).get('text', '')
-            if content:
-                results.append(content)
-        
-        if results:
-            return "\n\n".join(results)
-        else:
-            return "No relevant SCOTUS information found for your query."
-            
-    except Exception as e:
-        return f"Error searching SCOTUS knowledge base: {str(e)}"
+    # Extract the original input
+    tool_input = tool["input"]
+    
+    # Add the pre-configured knowledge base settings
+    enhanced_input = {
+        **tool_input,
+        "knowledgeBaseId": "XPXXQUL4A6",
+        "region": "us-east-1"
+    }
+    
+    # Create a new tool object with the enhanced input
+    enhanced_tool = {
+        **tool,
+        "input": enhanced_input
+    }
+    
+    # Call the original retrieve function with our pre-configured settings
+    return retrieve(enhanced_tool, **kwargs)
+
+# Attach TOOL_SPEC to function for Strands framework
+scotus_kb_search.TOOL_SPEC = TOOL_SPEC

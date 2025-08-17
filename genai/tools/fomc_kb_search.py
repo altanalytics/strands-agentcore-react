@@ -1,54 +1,69 @@
-"""
-FOMC Knowledge Base Search Tool
-Searches the Federal Open Market Committee knowledge base for relevant information.
-"""
+# fomc_kb_search.py
 
-import boto3
-from strands.tools import tool
+from strands_tools.retrieve import retrieve
+from typing import Any
 
-@tool
-def fomc_kb_search(query: str) -> str:
+# 1. Tool Specification
+TOOL_SPEC = {
+    "name": "fomc_kb_search",
+    "description": "Search the FOMC knowledge base for Federal Reserve monetary policy information, meeting minutes, and economic decisions.",
+    "inputSchema": {
+        "json": {
+            "type": "object",
+            "properties": {
+                "text": {
+                    "type": "string",
+                    "description": "The query to search for in the FOMC knowledge base"
+                },
+                "numberOfResults": {
+                    "type": "integer",
+                    "description": "The maximum number of results to return. Default is 5.",
+                    "default": 5
+                },
+                "score": {
+                    "type": "number",
+                    "description": "Minimum relevance score threshold (0.0-1.0). Default is 0.4.",
+                    "default": 0.4
+                }
+            },
+            "required": ["text"]
+        }
+    }
+}
+
+# 2. Tool Function
+def fomc_kb_search(tool, **kwargs: Any):
     """
-    Search the FOMC knowledge base for information about Federal Reserve monetary policy,
-    meeting minutes, and economic decisions.
+    Search the FOMC knowledge base with pre-configured settings.
+    
+    This is a wrapper around the retrieve tool that automatically uses
+    the correct knowledge base ID and region for FOMC data.
     
     Args:
-        query: The search query to find relevant FOMC information
+        tool: Tool object containing toolUseId and input parameters
+        **kwargs: Additional keyword arguments
         
     Returns:
-        str: Relevant information from the FOMC knowledge base
+        dict: Structured response from the knowledge base search
     """
-    try:
-        # Initialize Bedrock Agent Runtime client
-        client = boto3.client('bedrock-agent-runtime', region_name='us-east-1')
-        
-        # Knowledge base ID for FOMC data
-        knowledge_base_id = "P7J0PZOXSE"
-        
-        # Perform the search
-        response = client.retrieve(
-            knowledgeBaseId=knowledge_base_id,
-            retrievalQuery={
-                'text': query
-            },
-            retrievalConfiguration={
-                'vectorSearchConfiguration': {
-                    'numberOfResults': 5
-                }
-            }
-        )
-        
-        # Extract and format the results
-        results = []
-        for result in response.get('retrievalResults', []):
-            content = result.get('content', {}).get('text', '')
-            if content:
-                results.append(content)
-        
-        if results:
-            return "\n\n".join(results)
-        else:
-            return "No relevant FOMC information found for your query."
-            
-    except Exception as e:
-        return f"Error searching FOMC knowledge base: {str(e)}"
+    # Extract the original input
+    tool_input = tool["input"]
+    
+    # Add the pre-configured knowledge base settings
+    enhanced_input = {
+        **tool_input,
+        "knowledgeBaseId": "P7J0PZOXSE",
+        "region": "us-east-1"
+    }
+    
+    # Create a new tool object with the enhanced input
+    enhanced_tool = {
+        **tool,
+        "input": enhanced_input
+    }
+    
+    # Call the original retrieve function with our pre-configured settings
+    return retrieve(enhanced_tool, **kwargs)
+
+# Attach TOOL_SPEC to function for Strands framework
+fomc_kb_search.TOOL_SPEC = TOOL_SPEC
