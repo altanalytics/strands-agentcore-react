@@ -6,7 +6,16 @@ from typing import Any
 # 1. Tool Specification
 TOOL_SPEC = {
     "name": "scotus_kb_search",
-    "description": "Search the SCOTUS knowledge base for Supreme Court cases, opinions, and legal precedents.",
+    "description": """Search the SCOTUS knowledge base for Supreme Court cases, opinions, and legal precedents.
+
+This tool provides access to Supreme Court opinions and decisions, enabling queries about:
+- Supreme Court case law and precedents
+- Constitutional interpretation and analysis
+- Legal reasoning and judicial opinions
+- Historical context of court decisions
+- Impact and implications of rulings
+
+Results are sorted by relevance score and include source metadata.""",
     "inputSchema": {
         "json": {
             "type": "object",
@@ -22,8 +31,10 @@ TOOL_SPEC = {
                 },
                 "score": {
                     "type": "number",
-                    "description": "Minimum relevance score threshold (0.0-1.0). Default is 0.4.",
-                    "default": 0.4
+                    "description": "Minimum relevance score threshold (0.0-1.0). Results below this score will be filtered out. Default is 0.4.",
+                    "default": 0.4,
+                    "minimum": 0.0,
+                    "maximum": 1.0
                 }
             },
             "required": ["text"]

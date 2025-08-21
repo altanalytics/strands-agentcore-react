@@ -30,7 +30,7 @@ cd strands-agentcore-react
 # Push to your remote repository
 ```
 
-1. Go to [AWS Amplify Console](https://console.aws.amazon.com/amplify/home)
+1. Go to [AWS Amplify Console](https://console.aws.amazon.com/amplify/home) in us-east-1
 2. Click "Deploy an App" or "Create New App" if you already have apps
 3. Select your remote git repository to link Amplify to git
 4. Choose the branch you want to deploy (e.g., `main`)
@@ -38,11 +38,10 @@ cd strands-agentcore-react
   - `AGENTCORE_RUNTIME_ARN` = `arn:aws:bedrock-agentcore:us-east-1:123456789012:runtime/strands_agent_xyz` 
     * You will get the real one after step 5, but use this placeholder for now before deployment
   - `NOTIFICATION_EMAIL` = `your-email@example.com`
-  - `AGENT_SESSION_S3` = `uniques3bucketname`
-  6. Once you deploy your application
-  7. You can login, but your Agent will not work
+6. Once you deploy your application
+7. You can login, but your Agent will not work
 
-**Pay close attention to the environment variables - these have to be set before you deploy**. The `AGENT_SESSION_S3` is a critical component because this is where your session IDs will get saved to and allow your agent to have memory. It also needs to be unique or else the creation will fail. You can create this bucket manually to be sure, but you still need to add it as an environment variable. It will skip the bucket creation if it already exists. 
+**Pay close attention to the environment variables - these have to be set before you deploy**
 
 ## Step 2. Build and Deploy Your AI Agent
 
@@ -83,7 +82,8 @@ docker run --platform linux/arm64 -p 8080:8080 \
   -e AWS_REGION="$AWS_REGION" \
   my-agent:arm64
 
-# OR Test with credentials file (you have to create this)
+# OR Test with credentials file based on a profile
+aws configure export-credentials --profile YOUR_PROFILE_NAME --format env-no-export > docker.env
 docker run --platform linux/arm64 -p 8080:8080 \
   --env-file docker.env my-agent:arm64
 

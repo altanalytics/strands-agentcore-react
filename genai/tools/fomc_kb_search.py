@@ -6,7 +6,15 @@ from typing import Any
 # 1. Tool Specification
 TOOL_SPEC = {
     "name": "fomc_kb_search",
-    "description": "Search the FOMC knowledge base for Federal Reserve monetary policy information, meeting minutes, and economic decisions.",
+    "description": """Search the FOMC knowledge base for Federal Reserve monetary policy information, meeting minutes, and economic decisions.
+
+This tool provides access to FOMC meeting transcripts and minutes from 1993-2019, enabling queries about:
+- Interest rate decisions and rationale
+- Economic outlook and Fed communications  
+- Historical context and precedents
+- Market implications of Fed actions
+
+Results are sorted by relevance score and include source metadata.""",
     "inputSchema": {
         "json": {
             "type": "object",
@@ -22,8 +30,10 @@ TOOL_SPEC = {
                 },
                 "score": {
                     "type": "number",
-                    "description": "Minimum relevance score threshold (0.0-1.0). Default is 0.4.",
-                    "default": 0.4
+                    "description": "Minimum relevance score threshold (0.0-1.0). Results below this score will be filtered out. Default is 0.4.",
+                    "default": 0.4,
+                    "minimum": 0.0,
+                    "maximum": 1.0
                 }
             },
             "required": ["text"]
