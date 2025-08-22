@@ -40,13 +40,10 @@ cd strands-agentcore-react
   - `NOTIFICATION_EMAIL` = `your-email@example.com`
 6. Once you deploy your application
 7. You can login, but your Agent will not work
+8. Activate the Amazon Bedrock Nova models (Micro, Pro, Premium) in your AWS account (region us-east-1)
+9. *You must also enable the Claude Sonnet 4 model - even though we are invoking Nova-Micro - Strands needs the claude model to be enabled to work 
 
-**Pay close attention to the environment variables - these have to be set before you deploy**
-
-## Step 2. Build and Deploy Your AI Agent
-
-### **1. Enable Bedrock Model**
-Go to AWS Bedrock Console and enable **Nova Micro Model** as well as the Pro and Premier. 
+*Pay close attention to the environment variables - these have to be set before you deploy*
 
 ### **2. Test Agent Locally**
 ```bash

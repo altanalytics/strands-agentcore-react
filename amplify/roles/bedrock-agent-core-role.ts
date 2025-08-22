@@ -70,8 +70,7 @@ export function createBedrockAgentCoreRole(scope: Construct): Role {
     resources: ['arn:aws:logs:*:*:*']
   }));
 
-  // Add S3 permissions for session storage
-  const sessionBucketName = process.env.AGENT_SESSION_S3 || 'agent-sessions-bucket-fallback';
+  // Add S3 permissions for session buckets (dynamic account/region)
   role.addToPolicy(new PolicyStatement({
     effect: Effect.ALLOW,
     actions: [
@@ -81,8 +80,8 @@ export function createBedrockAgentCoreRole(scope: Construct): Role {
       's3:ListBucket'
     ],
     resources: [
-      `arn:aws:s3:::${sessionBucketName}`,
-      `arn:aws:s3:::${sessionBucketName}/*`
+      'arn:aws:s3:::strands-agent-sessions-*',
+      'arn:aws:s3:::strands-agent-sessions-*/*'
     ]
   }));
 
