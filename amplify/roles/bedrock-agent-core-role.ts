@@ -26,10 +26,13 @@ export function createBedrockAgentCoreRole(scope: Construct): Role {
   role.addToPolicy(new PolicyStatement({
     effect: Effect.ALLOW,
     actions: [
-      'bedrock:InvokeModel',
-      'bedrock:InvokeModelWithResponseStream',
-      'bedrock:GetFoundationModel',
-      'bedrock:ListFoundationModels'
+      'bedrock-agentcore:CreateAgentRuntime',
+      'bedrock-agentcore:GetAgentRuntime',
+      'bedrock-agentcore:UpdateAgentRuntime',
+      'bedrock-agentcore:DeleteAgentRuntime',
+      'bedrock-agentcore:ListAgentRuntimes',
+      'bedrock-agentcore:InvokeAgentRuntime',
+      'bedrock-agentcore:InvokeAgentRuntimeForUser',
     ],
     resources: ['*']
   }));
